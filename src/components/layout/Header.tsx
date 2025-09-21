@@ -3,7 +3,30 @@ import { useAppContext } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { SubscriptionData } from '../../types/api';
+interface LegacySubscriptionData {
+  currentPlan: {
+    name: string;
+    limit: number;
+    code: string;
+    price?: number;
+    features?: any;
+  };
+  usage: {
+    current: number;
+    limit: number;
+    resetDate?: string;
+  };
+  subscription?: {
+    endDate: string;
+    isActive: boolean;
+  };
+}
+
+interface UserProfileData {
+  monthlyUsageCount: number;
+  email: string;
+  // other user profile fields...
+}
 import './Header.css';
 
 // Import apiClient
@@ -18,43 +41,81 @@ export function Header({ showNavigation = true }: HeaderProps) {
   const { currentUser } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { currentTheme, toggleTheme } = useTheme();
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
+  const [subscriptionData, setSubscriptionData] = useState<LegacySubscriptionData | null>(null);
+  const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
   useEffect(() => {
     if (currentUser) {
       loadSubscriptionData();
+      loadUsageData();
     }
   }, [currentUser]);
 
   useEffect(() => {
     const handleUsageUpdate = (event: CustomEvent) => {
       const usageData = event.detail;
-      if (usageData && subscriptionData) {
-        setSubscriptionData(prev => prev ? {
+      if (usageData && userProfileData) {
+        // Legacy gibi userProfileData.monthlyUsageCount update
+        setUserProfileData(prev => prev ? {
           ...prev,
-          usedThisMonth: usageData.current || prev.usedThisMonth,
-          monthlyLimit: usageData.limit || prev.monthlyLimit
+          monthlyUsageCount: usageData.current || prev.monthlyUsageCount || 0
         } : null);
       }
     };
 
     window.addEventListener('usageUpdated', handleUsageUpdate as EventListener);
-    
+
     return () => {
       window.removeEventListener('usageUpdated', handleUsageUpdate as EventListener);
     };
-  }, [subscriptionData]);
+  }, [userProfileData]);
 
   const loadSubscriptionData = async () => {
     try {
-      setIsLoadingUsage(true);
       const result = await apiClient.getSubscriptionStatus();
+
+      console.log('🔄 Backend subscription response:', result);
+
       if (result.success) {
-        setSubscriptionData(result.subscription || result.data || null);
+        // Backend response structure: currentPlan ve usage root level'da geliyor
+        const subscriptionData = {
+          currentPlan: result.currentPlan,
+          usage: result.usage,
+          subscription: result.subscription
+        };
+
+        console.log('📊 Formatted subscription data:', subscriptionData);
+        setSubscriptionData(subscriptionData);
+      } else {
+        console.error('❌ Backend subscription status failed:', result.error);
       }
     } catch (error) {
-      console.error('Error loading subscription data:', error);
+      console.error('💥 Error loading subscription data:', error);
+    }
+  };
+
+  const loadUsageData = async () => {
+    try {
+      setIsLoadingUsage(true);
+      console.log('📊 Loading usage data from backend...');
+
+      // Legacy gibi getUserProfile API call
+      const result = await apiClient.getUserProfile();
+
+      console.log('👤 Backend user profile response:', result);
+
+      if (result.success) {
+        const profileData = result.user || result.data;
+        if (profileData) {
+          console.log('📈 User profile data from backend:', profileData);
+          setUserProfileData(profileData);
+        }
+      } else {
+        console.error('❌ Backend user profile failed:', result.error);
+      }
+    } catch (error) {
+      console.error('💥 Error loading usage data:', error);
     } finally {
       setIsLoadingUsage(false);
     }
@@ -74,6 +135,32 @@ export function Header({ showNavigation = true }: HeaderProps) {
 
   const handleTabClick = (tab: 'check' | 'settings' | 'account' | 'subscription') => {
     switchTab(tab);
+  };
+
+  // Helper method to get translated plan name - uppercase format
+  const getTranslatedPlanName = (planName: string) => {
+    console.log('🏷️ Translating plan name:', planName);
+
+    // Map backend plan names to translation keys
+    const planKeyMap: Record<string, string> = {
+      'Free Plan': 'freePlan',
+      'Basic Plan': 'basicPlan',
+      'Pro Plan': 'proPlan',
+      'Unlimited Plan': 'unlimitedPlan'
+    };
+
+    const translationKey = planKeyMap[planName];
+    if (translationKey) {
+      const translatedName = t(translationKey);
+      const result = translatedName.toUpperCase();
+      console.log('🏷️ Plan name result:', result);
+      return result;
+    }
+
+    // Fallback to uppercase plan name
+    const result = planName.toUpperCase();
+    console.log('🏷️ Plan name fallback result:', result);
+    return result;
   };
 
   return (
@@ -103,23 +190,37 @@ export function Header({ showNavigation = true }: HeaderProps) {
       {/* Status Bar */}
       <div className="status-bar">
         <div className="usage-info">
-          <span className="usage-count">
-            {currentUser ? (
-              <>
-                <span className="plan-badge">{subscriptionData?.planName || currentUser.plan}</span>
-                <span className="separator">•</span>
-                {isLoadingUsage ? (
-                  'Loading usage...'
-                ) : subscriptionData ? (
-                  `${subscriptionData.usedThisMonth}/${subscriptionData.monthlyLimit === -1 ? '∞' : subscriptionData.monthlyLimit} ${t('checksUsed')}`
-                ) : (
-                  'Usage unavailable'
-                )}
-              </>
-            ) : (
-              'Loading usage...'
-            )}
-          </span>
+          {currentUser ? (
+            <span className="usage-count">
+              {isLoadingUsage ? (
+                'Loading usage...'
+              ) : subscriptionData && userProfileData ? (
+                <>
+                  <span className="plan-badge-usage">
+                    {getTranslatedPlanName(subscriptionData.currentPlan?.name || 'Free Plan')}
+                  </span>
+                  {(() => {
+                    const currentUsage = userProfileData.monthlyUsageCount || 0;
+                    const usageLimit = subscriptionData.currentPlan?.limit;
+                    const limitText = usageLimit === -1 ? '∞' : (usageLimit || 100);
+
+                    console.log('📊 Usage display:', {
+                      currentUsage,
+                      usageLimit,
+                      limitText,
+                      planName: subscriptionData.currentPlan?.name
+                    });
+
+                    return ` ${currentUsage}/${limitText} ${t('checksUsed')}`;
+                  })()}
+                </>
+              ) : (
+                '0/100 checks used'
+              )}
+            </span>
+          ) : (
+            <span className="usage-count">Loading usage...</span>
+          )}
         </div>
         <button className="upgrade-btn" onClick={handleUpgrade}>
           <span className="diamond-icon">💎</span>

@@ -34,8 +34,7 @@ export function Check() {
   const [asinInput, setAsinInput] = useState('');
   const [results, setResults] = useState<CheckResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<'insertion' | 'asin' | 'status' | 'title'>('insertion');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [inputAsinOrder, setInputAsinOrder] = useState<string[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [hasValidSettings, setHasValidSettings] = useState(false);
   const [progress, setProgress] = useState({ processed: 0, total: 0, success: 0, warning: 0, error: 0 });
@@ -83,6 +82,9 @@ export function Check() {
       showToast(t('enterValidAsins'), 'error');
       return;
     }
+
+    // Store the input order for CSV export
+    setInputAsinOrder(asins);
 
     setIsLoading(true);
     setResults([]); // Clear previous results
@@ -195,6 +197,7 @@ export function Check() {
       onConfirm: () => {
         setResults([]);
         setAsinInput('');
+        setInputAsinOrder([]);
         setIsAnimating(false);
         showToast(t('resultsCleared'), 'success');
       },
@@ -213,9 +216,28 @@ export function Check() {
     const headers = ['ASIN', 'Title', 'Brand', 'Status', 'Check Date'];
     const currentDate = new Date().toLocaleDateString('en-US');
     
+    // Create a map of results by ASIN for quick lookup
+    const resultsMap = new Map<string, CheckResult>();
+    results.forEach(result => {
+      resultsMap.set(result.asin, result);
+    });
+    
+    // Export in the order user inputted ASINs
     const csvContent = [
       headers.join(','),
-      ...results.map(result => {
+      ...inputAsinOrder.map(asin => {
+        const result = resultsMap.get(asin);
+        if (!result) {
+          // If result not found, create a placeholder row
+          return [
+            asin,
+            '"N/A"',
+            '"N/A"',
+            '"No Result"',
+            currentDate
+          ].join(',');
+        }
+        
         const productTitle = result.details?.title || result.details?.itemName || result.title || 'N/A';
         const productBrand = result.details?.brand || result.details?.brandName || result.brand || 'N/A';
         return [
@@ -285,7 +307,7 @@ export function Check() {
         case 'Eligible':
           return 'SELLABLE';
         case 'APPROVAL REQUIRED':
-          return 'APPROVAL REQUIRED';
+          return 'APPROVAL\nREQUIRED';
         case 'Restricted':
           return 'RESTRICTED';
         case 'Ineligible':
@@ -306,34 +328,7 @@ export function Check() {
     return 'UNKNOWN';
   };
 
-  const sortedResults = sortBy === 'insertion' ? results : [...results].sort((a, b) => {
-    let aValue: string | number;
-    let bValue: string | number;
-
-    switch (sortBy) {
-      case 'asin':
-        aValue = a.asin;
-        bValue = b.asin;
-        break;
-      case 'title':
-        aValue = (a.title || a.details?.title || a.details?.itemName || '').toLowerCase();
-        bValue = (b.title || b.details?.title || b.details?.itemName || '').toLowerCase();
-        break;
-      case 'status':
-        aValue = getStatusText(a);
-        bValue = getStatusText(b);
-        break;
-      default:
-        aValue = a.asin;
-        bValue = b.asin;
-    }
-
-    if (sortOrder === 'asc') {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-    }
-  });
+  // No sorting - display results in the order they come from backend
 
   return (
     <div className="check-container">
@@ -393,25 +388,6 @@ export function Check() {
               {t('results')} ({results.length})
             </h3>
             <div className="results-actions">
-              <div className="sort-controls">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'insertion' | 'asin' | 'status' | 'title')}
-                  className="sort-select"
-                >
-                  <option value="insertion">Insertion Order</option>
-                  <option value="asin">{t('sortByAsin')}</option>
-                  <option value="title">{t('sortByTitle')}</option>
-                  <option value="status">{t('sortByStatus')}</option>
-                </select>
-                <button 
-                  className="sort-order-btn"
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-                >
-                  {sortOrder === 'asc' ? '↑' : '↓'}
-                </button>
-              </div>
               <button 
                 className="results-action-btn"
                 onClick={handleExportCSV}
@@ -421,7 +397,7 @@ export function Check() {
             </div>
           </div>
           <div id="results" className="results-container">
-            {sortedResults.map((result, index) => {
+            {results.map((result, index) => {
               const productTitle = result.details?.title || result.details?.itemName || result.title || 'N/A';
               const productBrand = result.details?.brand || result.details?.brandName || result.brand || 'N/A';
               const productImage = result.imageUrl || 

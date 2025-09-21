@@ -54,6 +54,32 @@ export function Account() {
     confirmPassword: ''
   });
 
+  // Helper method to get translated plan name - same as Header component
+  const getTranslatedPlanName = (planName: string) => {
+    console.log('🏷️ Account: Translating plan name:', planName);
+
+    // Map backend plan names to translation keys
+    const planKeyMap: Record<string, string> = {
+      'Free Plan': 'freePlan',
+      'Basic Plan': 'basicPlan',
+      'Pro Plan': 'proPlan',
+      'Unlimited Plan': 'unlimitedPlan'
+    };
+
+    const translationKey = planKeyMap[planName];
+    if (translationKey) {
+      const translatedName = t(translationKey);
+      const result = translatedName.toUpperCase();
+      console.log('🏷️ Account: Plan name result:', result);
+      return result;
+    }
+
+    // Fallback to uppercase plan name
+    const result = planName.toUpperCase();
+    console.log('🏷️ Account: Plan name fallback result:', result);
+    return result;
+  };
+
   useEffect(() => {
     if (currentUser && !isDataLoaded) {
       loadAccountData();
@@ -241,7 +267,7 @@ export function Account() {
           <div className="account-profile">
             <div className="profile-avatar">
               <span className="avatar-icon">👤</span>
-              <span className="plan-badge">{userProfile?.plan || 'FREE'}</span>
+              <span className="plan-badge">{getTranslatedPlanName(userProfile?.plan || 'Free Plan')}</span>
             </div>
             <div className="profile-info">
               <h4 className="profile-name">{getDisplayName()}</h4>

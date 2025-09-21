@@ -13,6 +13,7 @@ import { Verification } from './pages/auth/Verification';
 import { MainApp } from './pages/main/MainApp';
 import './styles/common.css';
 import './styles/layout.css';
+import './components/layout/Header.css';
 import './styles/auth.css';
 import './styles/main.css';
 

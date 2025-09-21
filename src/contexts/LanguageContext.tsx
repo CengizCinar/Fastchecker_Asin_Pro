@@ -80,6 +80,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'passwordsDoNotMatch': 'Passwords do not match',
         'registrationSuccessful': 'Registration successful! Welcome to FastChecker!',
         'registrationFailed': 'Registration failed',
+
+        // Auth page texts (missing in EN)
+        'welcomeTitle': 'Welcome to FastChecker',
+        'welcomeSubtitle': 'Sign in to check your ASIN eligibility',
+        'loginTitle': 'Login',
+        'loginDesc': 'Enter your email below to login to your account',
         'emailPlaceholder': 'm@example.com',
         'passwordPlaceholder': '••••••••',
         'signIn': 'Sign In',
@@ -238,6 +244,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'availablePlans': 'Available Plans',
         'monthlyLimit': 'Monthly Limit',
         'usedThisMonth': 'Used This Month',
+        'freePlan': 'Free Plan',
         'basicPlan': 'Basic Plan',
         'proPlan': 'Pro Plan',
         'unlimitedPlan': 'Unlimited Plan',
@@ -468,6 +475,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'availablePlans': 'Mevcut Planlar',
         'monthlyLimit': 'Aylık Limit',
         'usedThisMonth': 'Bu Ay Kullanılan',
+        'freePlan': 'Ücretsiz Plan',
         'basicPlan': 'Temel Plan',
         'proPlan': 'Pro Plan',
         'unlimitedPlan': 'Sınırsız Plan',

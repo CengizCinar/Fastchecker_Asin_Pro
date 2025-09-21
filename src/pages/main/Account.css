@@ -1,7 +1,16 @@
+/* Account Page Hardcoded CSS - Login sayfası gibi hardcoded renkler */
+
+/* Force light theme colors - no dark mode override */
+.account-page,
+.account-page * {
+  color-scheme: light !important;
+}
+
 .account-page {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
+  position: relative;
 }
 
 .account-container {
@@ -12,8 +21,8 @@
 
 /* Account Card */
 .account-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius);
   padding: 24px;
 }
@@ -28,7 +37,7 @@
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
   margin: 0;
 }
 
@@ -39,8 +48,8 @@
 
 .logout-btn {
   padding: 8px 16px;
-  background: hsl(var(--destructive));
-  color: hsl(var(--destructive-foreground));
+  background: #ef4444 !important;
+  color: #ffffff !important;
   border: none;
   border-radius: var(--radius);
   font-size: 0.9rem;
@@ -50,7 +59,7 @@
 }
 
 .logout-btn:hover {
-  background: hsl(var(--destructive) / 0.8);
+  background: #dc2626 !important;
 }
 
 .account-profile {
@@ -66,26 +75,26 @@
   justify-content: center;
   width: 60px;
   height: 60px;
-  background: hsl(var(--muted));
+  background: #e5e7eb !important;
   border-radius: 50%;
 }
 
 .avatar-icon {
   font-size: 1.5rem;
-  color: hsl(var(--muted-foreground));
+  color: #6b7280 !important;
 }
 
 .plan-badge {
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: #00d4aa !important;
+  color: #ffffff !important;
   font-size: 0.7rem;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 8px;
-  border: 2px solid hsl(var(--card));
+  border: 2px solid #ffffff !important;
 }
 
 .profile-info {
@@ -95,27 +104,27 @@
 .profile-name {
   font-size: 1.1rem;
   font-weight: 600;
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
   margin: 0 0 4px 0;
 }
 
 .profile-email {
   font-size: 0.9rem;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   margin: 0 0 4px 0;
 }
 
 .member-since {
   font-size: 0.85rem;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   margin: 0;
 }
 
 /* Usage Statistics */
 .stats-period {
   font-size: 0.85rem;
-  color: hsl(var(--muted-foreground));
-  background: hsl(var(--muted));
+  color: #64748b !important;
+  background: #f1f5f9 !important;
   padding: 4px 8px;
   border-radius: 4px;
 }
@@ -141,36 +150,36 @@
 .stat-label {
   font-size: 0.9rem;
   font-weight: 500;
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
 }
 
 .stat-value {
   font-size: 1.1rem;
   font-weight: 600;
-  color: hsl(var(--primary));
+  color: #00d4aa !important;
 }
 
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: hsl(var(--muted));
+  background: #f1f5f9 !important;
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: hsl(var(--primary));
+  background: #00d4aa !important;
   transition: width 0.3s ease;
 }
 
 .success-progress {
-  background: hsl(var(--success));
+  background: #10b981 !important;
 }
 
 .stat-limit {
   font-size: 0.85rem;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   text-align: right;
 }
 
@@ -186,16 +195,16 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: hsl(var(--background));
-  border: 1px solid hsl(var(--border));
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .setting-option:hover {
-  background: hsl(var(--muted));
-  border-color: hsl(var(--primary));
+  background: #f1f5f9 !important;
+  border-color: #00d4aa !important;
 }
 
 .setting-icon {
@@ -206,12 +215,12 @@
   flex: 1;
   font-size: 0.95rem;
   font-weight: 500;
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
 }
 
 .setting-arrow {
   font-size: 1rem;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   transition: transform 0.2s ease;
 }
 
@@ -219,9 +228,9 @@
 .setting-form {
   margin-top: 16px;
   padding: 16px;
-  background: hsl(var(--muted) / 0.3);
+  background: rgba(241, 245, 249, 0.3) !important;
   border-radius: var(--radius);
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #e2e8f0 !important;
 }
 
 .form-group {
@@ -234,27 +243,27 @@
 .form-label {
   font-size: 0.9rem;
   font-weight: 500;
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
 }
 
 .form-input {
   padding: 12px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius);
   font-size: 0.9rem;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: #f8fafc !important;
+  color: #1e293b !important;
   transition: border-color 0.2s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  border-color: #00d4aa !important;
+  box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.2) !important;
 }
 
 .form-input:read-only {
-  background: hsl(var(--muted));
+  background: #f1f5f9 !important;
   opacity: 0.7;
 }
 
@@ -278,21 +287,21 @@
 }
 
 .action-btn.primary {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: #00d4aa !important;
+  color: #ffffff !important;
 }
 
 .action-btn.primary:hover:not(:disabled) {
-  background: hsl(var(--primary) / 0.8);
+  background: #00b894 !important;
 }
 
 .action-btn.secondary {
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
+  background: #f1f5f9 !important;
+  color: #64748b !important;
 }
 
 .action-btn.secondary:hover:not(:disabled) {
-  background: hsl(var(--border));
+  background: #e2e8f0 !important;
 }
 
 .action-btn:disabled {
@@ -318,16 +327,12 @@
 
 .export-description {
   font-size: 0.9rem;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   margin: 0;
   line-height: 1.5;
 }
 
-/* Loading Overlay - Local to account page only */
-.account-page {
-  position: relative;
-}
-
+/* Loading Overlay */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -348,8 +353,8 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid hsl(var(--border));
-  border-top: 3px solid hsl(var(--primary));
+  border: 3px solid #e2e8f0 !important;
+  border-top: 3px solid #00d4aa !important;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -360,8 +365,183 @@
 }
 
 .loading-overlay span {
-  color: hsl(var(--foreground));
+  color: #1e293b !important;
   font-size: 0.9rem;
+}
+
+/* Dark theme overrides - Login sayfası mantığı */
+.dark .account-page {
+  background: #111827 !important;
+}
+
+.dark .account-card {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .card-title {
+  color: #e5e7eb !important;
+}
+
+.dark .profile-avatar {
+  background: #374151 !important;
+}
+
+.dark .avatar-icon {
+  color: #9ca3af !important;
+}
+
+.dark .plan-badge {
+  background: #00d4aa !important;
+  color: #ffffff !important;
+  border: 2px solid #1f2937 !important;
+}
+
+.dark .profile-name {
+  color: #e5e7eb !important;
+}
+
+.dark .profile-email {
+  color: #9ca3af !important;
+}
+
+.dark .member-since {
+  color: #9ca3af !important;
+}
+
+.dark .stats-period {
+  color: #9ca3af !important;
+  background: #374151 !important;
+}
+
+.dark .stat-label {
+  color: #e5e7eb !important;
+}
+
+.dark .stat-value {
+  color: #00d4aa !important;
+}
+
+.dark .progress-bar {
+  background: #374151 !important;
+}
+
+.dark .progress-fill {
+  background: #00d4aa !important;
+}
+
+.dark .stat-limit {
+  color: #9ca3af !important;
+}
+
+.dark .setting-option {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .setting-option:hover {
+  background: #374151 !important;
+  border-color: #00d4aa !important;
+}
+
+.dark .setting-label {
+  color: #e5e7eb !important;
+}
+
+.dark .setting-arrow {
+  color: #9ca3af !important;
+}
+
+.dark .setting-form {
+  background: rgba(55, 65, 81, 0.3) !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .form-label {
+  color: #e5e7eb !important;
+}
+
+.dark .form-input {
+  background: #1f2937 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .form-input:focus {
+  border-color: #00d4aa !important;
+  box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.2) !important;
+}
+
+.dark .form-input:read-only {
+  background: #374151 !important;
+}
+
+.dark .action-btn.secondary {
+  background: #374151 !important;
+  color: #9ca3af !important;
+}
+
+.dark .action-btn.secondary:hover:not(:disabled) {
+  background: #4b5563 !important;
+}
+
+.dark .export-description {
+  color: #9ca3af !important;
+}
+
+.dark .loading-overlay {
+  background: rgba(31, 41, 55, 0.8);
+}
+
+.dark .loading-spinner {
+  border: 3px solid #374151 !important;
+  border-top: 3px solid #00d4aa !important;
+}
+
+.dark .loading-overlay span {
+  color: #e5e7eb !important;
+}
+
+/* Force green colors regardless of theme */
+.stat-value,
+.progress-fill,
+.action-btn.primary,
+.plan-badge {
+  background: #00d4aa !important;
+  color: #ffffff !important;
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  background: #00b894 !important;
+}
+
+.dark .stat-value,
+.dark .progress-fill,
+.dark .action-btn.primary,
+.dark .plan-badge {
+  background: #00d4aa !important;
+  color: #ffffff !important;
+}
+
+.dark .action-btn.primary:hover:not(:disabled) {
+  background: #00b894 !important;
+}
+
+/* Force profile avatar with maximum specificity */
+body .account-page .account-container .account-profile .profile-avatar,
+.account-page .account-container .account-profile .profile-avatar,
+.account-container .account-profile .profile-avatar,
+.account-profile .profile-avatar,
+html .profile-avatar {
+  background: #e5e7eb !important;
+}
+
+body.dark .account-page .account-container .account-profile .profile-avatar,
+.dark .account-page .account-container .account-profile .profile-avatar,
+.dark .account-container .account-profile .profile-avatar,
+.dark .account-profile .profile-avatar,
+html.dark .profile-avatar {
+  background: #374151 !important;
 }
 
 /* Responsive Design */
@@ -369,50 +549,37 @@
   .account-page {
     padding: 16px;
   }
-  
+
   .account-card {
     padding: 16px;
   }
-  
+
   .card-header {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .account-profile {
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
-  
+
   .profile-info {
     text-align: center;
   }
-  
+
   .usage-stats {
     gap: 16px;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .action-btn {
     width: 100%;
     justify-content: center;
   }
-}
-
-/* Dark mode adjustments */
-[data-theme="dark"] .form-input {
-  background: hsl(var(--card));
-}
-
-[data-theme="dark"] .setting-form {
-  background: hsl(var(--muted) / 0.2);
-}
-
-[data-theme="dark"] .setting-option {
-  background: hsl(var(--card));
 }
