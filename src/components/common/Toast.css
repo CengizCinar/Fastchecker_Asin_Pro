@@ -1,0 +1,125 @@
+/* Toast Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  min-width: 300px;
+  max-width: 400px;
+  z-index: 1001;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.toast-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: hsl(var(--muted-foreground));
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+/* Toast Types */
+.toast.success {
+  border-left: 4px solid hsl(var(--success));
+}
+
+.toast.success .toast-icon {
+  color: hsl(var(--success));
+}
+
+.toast.error {
+  border-left: 4px solid hsl(var(--destructive));
+}
+
+.toast.error .toast-icon {
+  color: hsl(var(--destructive));
+}
+
+.toast.warning {
+  border-left: 4px solid hsl(var(--warning));
+}
+
+.toast.warning .toast-icon {
+  color: hsl(var(--warning));
+}
+
+.toast.info {
+  border-left: 4px solid hsl(var(--info));
+}
+
+.toast.info .toast-icon {
+  color: hsl(var(--info));
+}
+
+/* Dark mode adjustments */
+.dark .toast {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Toast container for multiple toasts */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast-container .toast {
+  position: relative;
+  top: auto;
+  right: auto;
+  pointer-events: auto;
+}

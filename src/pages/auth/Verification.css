@@ -1,0 +1,638 @@
+/* FastChecker Email Verification Styles - Reference Design */
+
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83% 58%;
+    --radius: 0.875rem;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(262 83% 48%) 100%);
+    --gradient-bg: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(282 83% 58%) 100%);
+    /* Email verification specific */
+    --verification-bg: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(282 83% 58%) 100%);
+    --code-input-bg: hsl(0 0% 100%);
+    --code-input-border: hsl(262 83% 88%);
+    --timer-bg: hsl(210 40% 96.1%);
+    --email-display-bg: hsl(262 83% 58% / 0.10);
+    /* CTA (lavender) */
+    --cta: 262 83% 77%;
+}
+
+* {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 641px;
+    width: 425px;
+    overflow: hidden !important;
+}
+
+body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    background-image: var(--gradient-bg);
+    background-attachment: fixed;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Utility Classes */
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.grid {
+    display: grid;
+}
+
+.place-items-center {
+    place-items: center;
+}
+
+.p-6 {
+    padding: 0.5rem;
+}
+
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.my-6 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mt-2 {
+    margin-top: 0.25rem;
+}
+
+.mt-6 {
+    margin-top: 1rem;
+}
+
+.flex {
+    display: flex;
+}
+
+.h-8 {
+    height: 2rem;
+}
+
+.h-px {
+    height: 1px;
+}
+
+.w-8 {
+    width: 2rem;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.max-w-2xl {
+    max-width: 42rem;
+}
+
+.max-w-sm {
+    max-width: 24rem;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.rounded-2xl {
+    border-radius: 1rem;
+}
+
+.border {
+    border-width: 1px;
+}
+
+.bg-gray-200 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-3xl {
+    font-size: 1.375rem;
+    line-height: 1.625rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.text-base {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    margin-bottom: 1.25rem;
+}
+
+.verification-content h1 {
+    margin: 0;
+}
+
+.verification-content .text-base {
+    margin: 0;
+}
+
+.verification-content > p {
+    margin: 0;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.font-extrabold {
+    font-weight: 800;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.tracking-tight {
+    letter-spacing: -0.025em;
+}
+
+.text-accent {
+    color: hsl(var(--accent));
+}
+
+.text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+}
+
+.underline {
+    text-decoration-line: underline;
+}
+
+@media (min-width: 768px) {
+    .md\:text-4xl {
+        font-size: 1.75rem;
+        line-height: 2rem;
+    }
+
+    .md\:text-lg {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+}
+
+/* Main Components - Side Panel Optimized */
+.frame {
+    width: 425px;
+    height: 641px;
+    border-radius: 0;
+    padding: 12px;
+    background-image: var(--verification-bg);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.card {
+    height: 617px;
+    width: 401px;
+    border-radius: 20px;
+    background-color: hsl(var(--card));
+    padding: 1.25rem;
+    color: hsl(var(--card-foreground));
+    box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.verification-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    flex: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    gap: 0.75rem;
+}
+
+.verification-content form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.icon-wrap {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.75rem;
+    display: grid;
+    height: 3rem;
+    width: 3rem;
+    place-items: center;
+    border-radius: 0.75rem;
+    border-width: 1px;
+    background: hsl(var(--muted));
+}
+
+.icon {
+    color: hsl(var(--primary));
+}
+
+.email-banner {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    border-radius: 0.5rem;
+    border-width: 1px;
+    padding: 0.625rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-weight: 400;
+    font-size: 0.8125rem;
+    background: var(--email-display-bg);
+    white-space: nowrap;
+}
+
+.email-banner span#verificationEmail {
+    color: hsl(var(--accent));
+    font-weight: 500;
+}
+
+/* OTP Input Styling - Compact Side Panel */
+.otp {
+    margin-top: 0;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+}
+
+.code-box {
+    width: 42px;
+    height: 42px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 16px;
+    background: hsl(var(--code-input-bg));
+    border: 1px solid var(--code-input-border);
+    border-radius: 6px;
+    outline: 0;
+    transition: box-shadow .15s, border .15s;
+    color: hsl(var(--foreground));
+}
+
+.code-box:focus {
+    box-shadow: 0 0 0 4px hsl(262 83% 58% / .25);
+    border-color: hsl(262 83% 70%);
+}
+
+.code-box.filled {
+    border-color: hsl(262 83% 70%);
+}
+
+.code-box.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239,68,68,.15);
+    animation: shake 0.5s ease-in-out;
+}
+
+.code-box:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f1f5f9;
+    border-color: #d1d5db;
+}
+
+@media (max-width: 420px) {
+    .code-box {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .otp {
+        gap: 0.2rem;
+    }
+}
+
+/* Button Styling - Side Panel Optimized */
+.btn-primary {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 800;
+    color: rgb(255 255 255);
+    background: hsl(var(--cta));
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary:hover:not(:disabled) {
+    filter: brightness(1.05);
+}
+
+/* Remove desktop media query for side panel */
+
+/* Timer Styling - Centered Layout */
+.timer {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    min-width: 80px;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    padding: 0.5rem 0.875rem;
+    text-align: center;
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+    font-weight: 600;
+    background: var(--timer-bg);
+    color: hsl(var(--foreground));
+    display: block;
+    width: fit-content;
+}
+
+.timer.warning {
+    color: #dc2626;
+}
+
+/* Remove timer desktop media query for side panel */
+
+/* Resend Timer */
+.resend-timer {
+    color: #999;
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.resend-section {
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+#verificationForm > p {
+    margin: 0;
+}
+
+#verificationForm > .timer,
+#verificationForm > .otp,
+#verificationForm > .resend-section,
+#verificationForm > .resend-timer,
+#verificationForm > .btn-primary {
+    margin: 0;
+}
+
+#verificationForm > .btn-primary {
+    margin-top: 0.25rem;
+}
+
+.resend-timer span {
+    font-weight: 600;
+}
+
+/* Messages */
+.error-message, .success-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.error-message {
+    background: #fee;
+    color: #c53030;
+    border: 1px solid #feb2b2;
+}
+
+.success-message {
+    background: #f0fff4;
+    color: #2f855a;
+    border: 1px solid #9ae6b4;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 36px;
+    z-index: 10;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay span {
+    color: hsl(var(--primary));
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Timer Expired Message */
+.timer-expired-message {
+    background: #fef3cd;
+    border: 1px solid #fde68a;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    text-align: left;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.timer-expired-message::before {
+    content: "⚠️";
+    font-size: 16px;
+    flex-shrink: 0;
+    color: #f59e0b;
+}
+
+.timer-expired-message .message-content {
+    flex: 1;
+}
+
+.timer-expired-message p {
+    margin: 2px 0;
+    color: #92400e;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.timer-expired-message p:first-child {
+    font-weight: 500;
+    color: #dc2626;
+    margin-bottom: 2px;
+}
+
+/* Animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Back Button Fix - Bold Weight */
+#backToLoginBtn {
+    background: white;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    transition: all 0.2s ease;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    padding: 0.75rem;
+    margin-top: auto;
+    margin-bottom: 0;
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+}
+
+#backToLoginBtn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* Resend Button Fix */
+#resendBtn {
+    background: none;
+    border: none;
+    color: hsl(var(--accent));
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    padding: 4px;
+    transition: all 0.2s ease;
+}
+
+#resendBtn:hover {
+    color: hsl(262 83% 48%);
+}
+
+#resendBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Hidden Input */
+#verificationCode {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+}

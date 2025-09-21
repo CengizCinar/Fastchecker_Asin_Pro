@@ -1,0 +1,534 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+export type Language = 'en' | 'tr';
+
+interface LanguageContextType {
+  currentLanguage: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
+
+  // Load language from storage on mount
+  useEffect(() => {
+    const loadLanguage = async () => {
+      try {
+        const result = await chrome.storage.local.get(['language']);
+        const savedLanguage = result.language || 'en';
+        setCurrentLanguage(savedLanguage as Language);
+      } catch (error) {
+        console.error('Failed to load language:', error);
+        setCurrentLanguage('en');
+      }
+    };
+
+    loadLanguage();
+  }, []);
+
+  // Save language to storage when changed
+  const setLanguage = async (lang: Language) => {
+    try {
+      setCurrentLanguage(lang);
+      await chrome.storage.local.set({ language: lang });
+    } catch (error) {
+      console.error('Failed to save language:', error);
+    }
+  };
+
+  // Translation function
+  const t = (key: string): string => {
+    const texts = getLanguageTexts();
+    return (texts as any)[key] || key;
+  };
+
+  // Language texts from reference sidepanel.js
+  const getLanguageTexts = () => {
+    const texts = {
+      en: {
+        // Navigation tabs
+        'login': 'Login',
+        'register': 'Register',
+        'verification': 'Verification',
+        'check': 'Check',
+        'settings': 'Settings',
+        'account': 'Account',
+        'subscription': 'Subscription',
+        
+        // Auth forms
+        'email': 'Email',
+        'password': 'Password',
+        'confirmPassword': 'Confirm Password',
+        'loginButton': 'Login',
+        'registerButton': 'Register',
+        'verificationCode': 'Verification Code',
+        'verifyButton': 'Verify',
+        'resendCode': 'Resend Code',
+        
+        // Auth messages
+        'pleaseFillAllFields': 'Please fill in all fields',
+        'loginSuccessful': 'Login successful!',
+        'loginFailed': 'Login failed',
+        'pleaseCheckEmailForVerification': 'Please check your email for verification code',
+        'passwordsDoNotMatch': 'Passwords do not match',
+        'registrationSuccessful': 'Registration successful! Welcome to FastChecker!',
+        'registrationFailed': 'Registration failed',
+        'emailPlaceholder': 'm@example.com',
+        'passwordPlaceholder': '••••••••',
+        'signIn': 'Sign In',
+        'signingIn': 'Signing In...',
+        'dontHaveAccount': "Don't have an account?",
+        'signUp': 'Sign up',
+        'createAccount': 'Create Account',
+        'createAccountSubtitle': 'Sign up to start checking ASINs',
+        'registerTitle': 'Register',
+        'registerDesc': 'Create your account to get started',
+        'confirmPasswordPlaceholder': '••••••••',
+        'createAccountBtn': 'Create Account',
+        'creatingAccount': 'Creating Account...',
+        'alreadyHaveAccount': 'Already have an account?',
+        'signInLink': 'Sign in',
+        'verifyYourEmail': 'Verify Your Email',
+        'verificationCodeSent': 'We\'ve sent a 6-digit code to your email',
+        'codeSentTo': 'Code sent to',
+        'verifyEmail': 'Verify Email',
+        'verifying': 'Verifying...',
+        'codeExpiresIn': 'Code expires in',
+        'didntReceiveCode': 'Didn\'t receive the code?',
+        'resendAvailableIn': 'Resend available in',
+        'backToLogin': 'Back to Login',
+        'verificationCodeExpired': 'Your verification code has expired.',
+        'pleaseResendCode': 'Please click "Resend Code" to get a new code.',
+        
+            // Check page
+            'asinInput': 'ASIN Input',
+            'checkAsins': 'Check ASINs',
+            'clearAsins': 'Clear',
+            'emptyResults': 'Enter ASINs to check their eligibility',
+            'emptySubtext': 'Results will appear here',
+            'export': 'Export',
+            'results': 'Results',
+            'exportCSV': 'Export CSV',
+            'clear': 'Clear',
+            'sortByAsin': 'Sort by ASIN',
+            'sortByTitle': 'Sort by Title',
+            'sortByStatus': 'Sort by Status',
+            'sortAscending': 'Sort Ascending',
+            'sortDescending': 'Sort Descending',
+            'noResultsYet': 'No Results Yet',
+            'enterAsinsToCheck': 'Enter ASINs above and click "Check ASINs" to see results',
+            'checkingAsins': 'Checking ASINs...',
+            'enterAtLeastOneAsin': 'Please enter at least one ASIN',
+            'enterValidAsins': 'Please enter valid ASINs',
+            'checkedAsinsSuccessfully': 'Checked {count} ASINs successfully',
+            'failedToCheckAsins': 'Failed to check ASINs',
+            'noResultsToExport': 'No results to export',
+            'csvExportedSuccessfully': 'CSV exported successfully',
+            'resultsCleared': 'Results cleared',
+            'clearResults': 'Clear Results',
+            'areYouSureClearResults': 'Are you sure you want to clear all results?',
+            'eligible': 'Eligible',
+            'requiresApproval': 'Requires Approval',
+            'restricted': 'Restricted',
+            'ineligible': 'Ineligible',
+            'sellable': 'Sellable',
+            'approvalRequired': 'Approval Required',
+            'notEligible': 'Not Eligible',
+            'unknown': 'Unknown',
+            'checkError': 'Error',
+            'cancel': 'Cancel',
+            'confirm': 'Confirm',
+        
+        // Settings
+        'spApiSettings': 'SP-API Settings',
+        'spApiConfiguration': 'SP-API Configuration',
+        'sellerId': 'Seller ID',
+        'accessKey': 'Access Key',
+        'secretKey': 'Secret Key',
+        'region': 'Region',
+        'refreshToken': 'Refresh Token',
+        'clientId': 'Client ID',
+        'clientSecret': 'Client Secret',
+        'marketplace': 'Marketplace',
+        'saveSettings': 'Save Settings',
+        'testConnection': 'Test Connection',
+        'editSettings': 'Edit Settings',
+        'preferences': 'Preferences',
+        'enableManualCheck': 'Enable Manual Check',
+        'enableManualCheckDesc': 'Allow manual ASIN checking through external tools',
+        'manualCheckMethod': 'Manual Check Method',
+        'remoteComputer': 'Remote Computer',
+        'thisComputer': 'This Computer',
+        'websocketUrl': 'WebSocket URL',
+        'localPath': 'Extension ID',
+        'enterWebsocketUrl': 'Enter WebSocket URL',
+        'enterLocalPath': 'Enter Extension ID',
+        'failedToLoadSettings': 'Failed to load settings',
+        'settingsSavedSuccessfully': 'Settings saved successfully',
+        'failedToSaveSettings': 'Failed to save settings',
+        'pleaseConfigureSettings': 'Please configure your SP-API settings to continue',
+        'saved': 'Saved',
+        'cancelChanges': 'Cancel Changes',
+        'cancelChangesMessage': 'Are you sure you want to cancel? Unsaved changes will be lost.',
+        'discard': 'Discard',
+        'continueEditing': 'Continue Editing',
+        'saving': 'Saving...',
+        'testing': 'Testing...',
+        'language': 'Language',
+        'selectLanguage': 'Choose your preferred language',
+        'darkMode': 'Dark Mode',
+        'darkModeDesc': 'Toggle between light and dark theme',
+        'loading': 'Loading...',
+        
+        // Account
+        'profile': 'Profile',
+        'usage': 'Usage',
+        'logout': 'Logout',
+        'exportData': 'Export Data',
+        'accountOverview': 'Account Overview',
+        'usageStatistics': 'Usage Statistics',
+        'thisMonth': 'This Month',
+        'asinsChecked': 'ASINs Checked',
+        'successRate': 'Success Rate',
+        'limit': 'limit',
+        'memberSince': 'Member since',
+        'changeEmail': 'Change Email',
+        'changePassword': 'Change Password',
+        'currentEmail': 'Current Email',
+        'newEmail': 'New Email',
+        'currentPassword': 'Current Password',
+        'newPassword': 'New Password',
+        'confirmNewPassword': 'Confirm New Password',
+        'updateEmail': 'Update Email',
+        'updatePassword': 'Update Password',
+        'enterNewEmail': 'Enter new email address',
+        'enterCurrentPassword': 'Enter current password',
+        'enterNewPassword': 'Enter new password',
+        'confirmNewPasswordPlaceholder': 'Confirm new password',
+        'accountSettings': 'Account Settings',
+        'exportAsinDescription': 'Export your monthly ASIN queries and results as CSV.',
+        'downloadCsv': 'Download CSV',
+        'failedToLoadAccountData': 'Failed to load account data',
+        'logoutConfirmation': 'Are you sure you want to logout?',
+        'loggedOutSuccessfully': 'Logged out successfully',
+        'logoutFailed': 'Logout failed',
+        'dataExportedSuccessfully': 'Data exported successfully',
+        'dataExportFailed': 'Data export failed',
+        'emailChangedSuccessfully': 'Email changed successfully',
+        'emailChangeFailed': 'Email change failed',
+        'passwordChangedSuccessfully': 'Password changed successfully',
+        'passwordChangeFailed': 'Password change failed',
+        'fillAllFields': 'Please fill in all fields',
+        'updating': 'Updating...',
+        'exporting': 'Exporting...',
+        'accountUnknown': 'Unknown',
+        
+        // Subscription
+        'currentPlan': 'Current Plan',
+        'upgrade': 'Upgrade',
+        'usageThisMonth': 'Usage This Month',
+        'checksUsed': 'checks used',
+        'availablePlans': 'Available Plans',
+        'monthlyLimit': 'Monthly Limit',
+        'usedThisMonth': 'Used This Month',
+        'basicPlan': 'Basic Plan',
+        'proPlan': 'Pro Plan',
+        'unlimitedPlan': 'Unlimited Plan',
+        'perMonth': '/month',
+        'mostPopular': 'Most Popular',
+        'upgradeToBasic': 'Upgrade to Basic',
+        'upgradeToPro': 'Upgrade to Pro',
+        'upgradeToUnlimited': 'Upgrade to Unlimited',
+        'basicFeature1': '✓ 1,000 ASIN checks/month',
+        'basicFeature2': '✓ Manual check enabled',
+        'basicFeature3': '✓ CSV export',
+        'basicFeature4': '✓ Email support',
+        'proFeature1': '✓ 5,000 ASIN checks/month',
+        'proFeature2': '✓ Manual check enabled',
+        'proFeature3': '✓ CSV export',
+        'proFeature4': '✓ API access',
+        'proFeature5': '✓ Bulk processing',
+        'proFeature6': '✓ Priority support',
+        'unlimitedFeature1': '✓ Unlimited ASIN checks',
+        'unlimitedFeature2': '✓ Manual check enabled',
+        'unlimitedFeature3': '✓ CSV export',
+        'unlimitedFeature4': '✓ API access',
+        'unlimitedFeature5': '✓ Bulk processing',
+        'unlimitedFeature6': '✓ Priority support',
+        'unlimitedFeature7': '✓ White label',
+        'upgradeTo': 'Upgrade to',
+        'downgradeTo': 'Downgrade to',
+        
+        // Status messages
+        'success': 'Success',
+        'error': 'Error',
+        
+        // Plan descriptions
+        'freePlanDesc': 'Basic features with limited checks',
+        'basicPlanDesc': '1,000 monthly checks with email support',
+        'proPlanDesc': '5,000 monthly checks with priority support',
+        'unlimitedPlanDesc': 'Unlimited checks with all features'
+      },
+      tr: {
+        // Navigation tabs
+        'login': 'Giriş',
+        'register': 'Kayıt',
+        'verification': 'Doğrulama',
+        'check': 'Kontrol',
+        'settings': 'Ayarlar',
+        'account': 'Hesap',
+        'subscription': 'Abonelik',
+        
+        // Auth forms
+        'email': 'E-posta',
+        'password': 'Şifre',
+        'confirmPassword': 'Şifre Tekrar',
+        'loginButton': 'Giriş Yap',
+        'registerButton': 'Kayıt Ol',
+        'verificationCode': 'Doğrulama Kodu',
+        'verifyButton': 'Doğrula',
+        'resendCode': 'Kodu Tekrar Gönder',
+        
+        // Auth messages
+        'pleaseFillAllFields': 'Lütfen tüm alanları doldurun',
+        'loginSuccessful': 'Giriş başarılı!',
+        'loginFailed': 'Giriş başarısız',
+        'pleaseCheckEmailForVerification': 'Lütfen doğrulama kodu için e-postanızı kontrol edin',
+        'passwordsDoNotMatch': 'Şifreler eşleşmiyor',
+        'registrationSuccessful': 'Kayıt başarılı! FastChecker\'a hoş geldiniz!',
+        'registrationFailed': 'Kayıt başarısız',
+        
+        // Auth page texts
+        'welcomeTitle': 'FastChecker\'a Hoş Geldiniz',
+        'welcomeSubtitle': 'ASIN uygunluğunuzu kontrol etmek için giriş yapın',
+        'loginTitle': 'Giriş',
+        'loginDesc': 'Hesabınıza giriş yapmak için e-posta adresinizi girin',
+        'emailPlaceholder': 'ornek@email.com',
+        'passwordPlaceholder': '••••••••',
+        'signIn': 'Giriş Yap',
+        'signingIn': 'Giriş yapılıyor...',
+        'dontHaveAccount': 'Hesabınız yok mu?',
+        'signUp': 'Kayıt ol',
+        'createAccount': 'Hesap Oluştur',
+        'createAccountSubtitle': 'ASIN kontrolüne başlamak için kayıt olun',
+        'registerTitle': 'Kayıt',
+        'registerDesc': 'Başlamak için hesabınızı oluşturun',
+        'confirmPasswordPlaceholder': '••••••••',
+        'createAccountBtn': 'Hesap Oluştur',
+        'creatingAccount': 'Hesap oluşturuluyor...',
+        'alreadyHaveAccount': 'Zaten hesabınız var mı?',
+        'signInLink': 'Giriş yap',
+        'verifyYourEmail': 'E-postanızı Doğrulayın',
+        'verificationCodeSent': 'E-postanıza 6 haneli bir kod gönderdik',
+        'codeSentTo': 'Kod gönderildi',
+        'verifyEmail': 'E-postayı Doğrula',
+        'verifying': 'Doğrulanıyor...',
+        'codeExpiresIn': 'Kod süresi doluyor',
+        'didntReceiveCode': 'Kodu almadınız mı?',
+        'resendAvailableIn': 'Tekrar gönderme süresi',
+        'backToLogin': 'Girişe Dön',
+        'verificationCodeExpired': 'Doğrulama kodunuzun süresi doldu.',
+        'pleaseResendCode': 'Yeni kod almak için "Kodu Tekrar Gönder"e tıklayın.',
+        
+            // Check page
+            'asinInput': 'ASIN Girişi',
+            'checkAsins': 'ASIN Kontrol Et',
+            'clearAsins': 'Temizle',
+            'emptyResults': 'ASIN uygunluğunu kontrol etmek için ASIN\'leri girin',
+            'emptySubtext': 'Sonuçlar burada görünecek',
+            'export': 'Dışa Aktar',
+            'results': 'Sonuçlar',
+            'exportCSV': 'CSV Dışa Aktar',
+            'clear': 'Temizle',
+            'sortByAsin': 'ASIN\'e Göre Sırala',
+            'sortByTitle': 'Başlığa Göre Sırala',
+            'sortByStatus': 'Duruma Göre Sırala',
+            'sortAscending': 'Artan Sıralama',
+            'sortDescending': 'Azalan Sıralama',
+            'noResultsYet': 'Henüz Sonuç Yok',
+            'enterAsinsToCheck': 'Yukarıdaki alana ASIN\'leri girin ve sonuçları görmek için "ASIN Kontrol Et"e tıklayın',
+            'checkingAsins': 'ASIN\'ler kontrol ediliyor...',
+            'enterAtLeastOneAsin': 'Lütfen en az bir ASIN girin',
+            'enterValidAsins': 'Lütfen geçerli ASIN\'ler girin',
+            'checkedAsinsSuccessfully': '{count} ASIN başarıyla kontrol edildi',
+            'failedToCheckAsins': 'ASIN\'ler kontrol edilemedi',
+            'noResultsToExport': 'Dışa aktarılacak sonuç yok',
+            'csvExportedSuccessfully': 'CSV başarıyla dışa aktarıldı',
+            'resultsCleared': 'Sonuçlar temizlendi',
+            'clearResults': 'Sonuçları Temizle',
+            'areYouSureClearResults': 'Tüm sonuçları temizlemek istediğinizden emin misiniz?',
+            'eligible': 'Uygun',
+            'requiresApproval': 'Onay Gerekli',
+            'restricted': 'Kısıtlama Var',
+            'ineligible': 'Uygun Değil',
+            'sellable': 'Satılabilir',
+            'approvalRequired': 'Onay Gerekli',
+            'notEligible': 'Satılamaz',
+            'unknown': 'Bilinmiyor',
+            'checkError': 'Hata',
+            'cancel': 'İptal',
+            'confirm': 'Onayla',
+        
+        // Settings
+        'spApiSettings': 'SP-API Ayarları',
+        'spApiConfiguration': 'SP-API Yapılandırması',
+        'sellerId': 'Satıcı ID',
+        'accessKey': 'Erişim Anahtarı',
+        'secretKey': 'Gizli Anahtar',
+        'region': 'Bölge',
+        'refreshToken': 'Yenileme Tokeni',
+        'clientId': 'İstemci ID',
+        'clientSecret': 'İstemci Gizli',
+        'marketplace': 'Pazar Yeri',
+        'saveSettings': 'Ayarları Kaydet',
+        'testConnection': 'Bağlantıyı Test Et',
+        'editSettings': 'Ayarları Düzenle',
+        'preferences': 'Tercihler',
+        'enableManualCheck': 'Manuel Kontrol Etkinleştir',
+        'enableManualCheckDesc': 'Harici araçlar aracılığıyla manuel ASIN kontrolüne izin ver',
+        'manualCheckMethod': 'Manuel Kontrol Yöntemi',
+        'remoteComputer': 'Uzak Bilgisayar',
+        'thisComputer': 'Bu Bilgisayar',
+        'websocketUrl': 'WebSocket URL',
+        'localPath': 'Uzantı ID',
+        'enterWebsocketUrl': 'WebSocket URL girin',
+        'enterLocalPath': 'Uzantı ID girin',
+        'failedToLoadSettings': 'Ayarlar yüklenemedi',
+        'settingsSavedSuccessfully': 'Ayarlar başarıyla kaydedildi',
+        'failedToSaveSettings': 'Ayarlar kaydedilemedi',
+        'pleaseConfigureSettings': 'Devam etmek için SP-API ayarlarınızı yapılandırın',
+        'saved': 'Kaydedildi',
+        'cancelChanges': 'Değişiklikleri İptal Et',
+        'cancelChangesMessage': 'İptal etmek istediğinizden emin misiniz? Kaydedilmemiş değişiklikler kaybolacak.',
+        'discard': 'Vazgeç',
+        'continueEditing': 'Düzenlemeye Devam Et',
+        'saving': 'Kaydediliyor...',
+        'testing': 'Test ediliyor...',
+        'language': 'Dil',
+        'selectLanguage': 'Tercih ettiğiniz dili seçin',
+        'darkMode': 'Karanlık Mod',
+        'darkModeDesc': 'Açık ve karanlık tema arasında geçiş yapın',
+        'loading': 'Yükleniyor...',
+        
+        // Account
+        'profile': 'Profil',
+        'usage': 'Kullanım',
+        'logout': 'Çıkış',
+        'exportData': 'Veri Dışa Aktar',
+        'accountOverview': 'Hesap Genel Bakış',
+        'usageStatistics': 'Kullanım İstatistikleri',
+        'thisMonth': 'Bu Ay',
+        'asinsChecked': 'Kontrol Edilen ASIN\'ler',
+        'successRate': 'Başarı Oranı',
+        'limit': 'limit',
+        'memberSince': 'Üyelik tarihi',
+        'changeEmail': 'E-posta Değiştir',
+        'changePassword': 'Şifre Değiştir',
+        'currentEmail': 'Mevcut E-posta',
+        'newEmail': 'Yeni E-posta',
+        'currentPassword': 'Mevcut Şifre',
+        'newPassword': 'Yeni Şifre',
+        'confirmNewPassword': 'Yeni Şifreyi Onayla',
+        'updateEmail': 'E-postayı Güncelle',
+        'updatePassword': 'Şifreyi Güncelle',
+        'enterNewEmail': 'Yeni e-posta adresi girin',
+        'enterCurrentPassword': 'Mevcut şifrenizi girin',
+        'enterNewPassword': 'Yeni şifrenizi girin',
+        'confirmNewPasswordPlaceholder': 'Yeni şifrenizi onaylayın',
+        'accountSettings': 'Hesap Ayarları',
+        'exportAsinDescription': 'Aylık ASIN sorgularınızı ve sonuçlarınızı CSV olarak dışa aktarın.',
+        'downloadCsv': 'CSV İndir',
+        'failedToLoadAccountData': 'Hesap verileri yüklenemedi',
+        'logoutConfirmation': 'Çıkış yapmak istediğinizden emin misiniz?',
+        'loggedOutSuccessfully': 'Başarıyla çıkış yapıldı',
+        'logoutFailed': 'Çıkış başarısız',
+        'dataExportedSuccessfully': 'Veriler başarıyla dışa aktarıldı',
+        'dataExportFailed': 'Veri dışa aktarma başarısız',
+        'emailChangedSuccessfully': 'E-posta başarıyla değiştirildi',
+        'emailChangeFailed': 'E-posta değiştirme başarısız',
+        'passwordChangedSuccessfully': 'Şifre başarıyla değiştirildi',
+        'passwordChangeFailed': 'Şifre değiştirme başarısız',
+        'fillAllFields': 'Lütfen tüm alanları doldurun',
+        'updating': 'Güncelleniyor...',
+        'exporting': 'Dışa aktarılıyor...',
+        'accountUnknown': 'Bilinmiyor',
+        
+        // Subscription
+        'currentPlan': 'Mevcut Plan',
+        'upgrade': 'Yükselt',
+        'usageThisMonth': 'Bu Ay Kullanım',
+        'checksUsed': 'kontrol kullanıldı',
+        'availablePlans': 'Mevcut Planlar',
+        'monthlyLimit': 'Aylık Limit',
+        'usedThisMonth': 'Bu Ay Kullanılan',
+        'basicPlan': 'Temel Plan',
+        'proPlan': 'Pro Plan',
+        'unlimitedPlan': 'Sınırsız Plan',
+        'perMonth': '/ay',
+        'mostPopular': 'En Popüler',
+        'upgradeToBasic': 'Temel\'e Yükselt',
+        'upgradeToPro': 'Pro\'ya Yükselt',
+        'upgradeToUnlimited': 'Sınırsız\'a Yükselt',
+        'basicFeature1': '✓ 1.000 ASIN kontrolü/ay',
+        'basicFeature2': '✓ Manuel kontrol etkin',
+        'basicFeature3': '✓ CSV dışa aktarma',
+        'basicFeature4': '✓ E-posta desteği',
+        'proFeature1': '✓ 5.000 ASIN kontrolü/ay',
+        'proFeature2': '✓ Manuel kontrol etkin',
+        'proFeature3': '✓ CSV dışa aktarma',
+        'proFeature4': '✓ API erişimi',
+        'proFeature5': '✓ Toplu işleme',
+        'proFeature6': '✓ Öncelikli destek',
+        'unlimitedFeature1': '✓ Sınırsız ASIN kontrolü',
+        'unlimitedFeature2': '✓ Manuel kontrol etkin',
+        'unlimitedFeature3': '✓ CSV dışa aktarma',
+        'unlimitedFeature4': '✓ API erişimi',
+        'unlimitedFeature5': '✓ Toplu işleme',
+        'unlimitedFeature6': '✓ Öncelikli destek',
+        'unlimitedFeature7': '✓ Beyaz etiket',
+        'upgradeTo': 'Yükselt',
+        'downgradeTo': 'Düşür',
+        
+        // Status messages
+        'success': 'Başarılı',
+        'error': 'Hata',
+        
+        
+        // Plan descriptions
+        'freePlanDesc': 'Sınırlı kontrollerle temel özellikler',
+        'basicPlanDesc': 'E-posta desteği ile 1.000 aylık kontrol',
+        'proPlanDesc': 'Öncelikli destek ile 5.000 aylık kontrol',
+        'unlimitedPlanDesc': 'Tüm özelliklerle sınırsız kontrol'
+      }
+    };
+    
+    return texts[currentLanguage] || texts.en;
+  };
+
+  const value: LanguageContextType = {
+    currentLanguage,
+    setLanguage,
+    t
+  };
+
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = (): LanguageContextType => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};

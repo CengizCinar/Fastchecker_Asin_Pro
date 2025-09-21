@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "FastChecker",
+  "version": "1.0.0",
+  "description": "Amazon SP API ASIN Checker",
+  "author": "FastChecker Team",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://sellingpartnerapi-na.amazon.com/*",
+    "https://sellingpartnerapi-eu.amazon.com/*",
+    "https://sellingpartnerapi-fe.amazon.com/*",
+    "https://fastcheckerwebsocket.glitch.me/*",
+    "https://*.up.railway.app/*"
+  ],
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "action": {
+    "default_title": "FastChecker"
+  }
+}
