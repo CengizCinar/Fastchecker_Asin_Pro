@@ -1,65 +1,15 @@
-/* Modern FastChecker Chrome Extension Styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Header Hardcoded CSS - Login sayfası gibi hardcoded renkler */
 
-:root {
-  /* Light theme colors */
-  --background: 240 10% 97%;
-  --foreground: 220 15% 20%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 15% 20%;
-  --primary: 165 100% 42%; /* #00d4aa */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 15% 90%;
-  --secondary-foreground: 220 15% 20%;
-  --muted: 220 15% 90%;
-  --muted-foreground: 220 15% 50%;
-  --accent: 162 100% 36%; /* #00b894 */
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 220 15% 88%;
-  --input: 220 15% 88%;
-  --ring: 165 100% 42%;
-  --radius: 0.8rem;
-}
-
-.dark {
-  --background: 220 15% 10%;
-  --foreground: 220 15% 90%;
-  --card: 220 15% 15%;
-  --card-foreground: 220 15% 90%;
-  --primary: 165 100% 42%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 15% 25%;
-  --secondary-foreground: 220 15% 90%;
-  --muted: 220 15% 25%;
-  --muted-foreground: 220 15% 60%;
-  --accent: 162 100% 36%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 220 15% 25%;
-  --input: 220 15% 25%;
-  --ring: 165 100% 42%;
-}
-
-/* Base styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* Force light theme colors - no dark mode override */
+.app-header,
+.app-header * {
+  color-scheme: light !important;
 }
 
 body {
   font-family: 'Inter', sans-serif;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: #f8fafc !important;
+  color: #1e293b !important;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -67,29 +17,25 @@ body {
 
 .app-container {
   width: 420px;
-  height: 100vh; /* Tam ekran yüksekliği */
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  background: hsl(var(--card));
+  background: #ffffff !important;
 }
 
 /* Header Styles */
 .app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 420px; /* Container genişliği */
+  position: relative;
+  width: 100%;
   z-index: 50;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
-  height: 132px; /* Header + status bar yüksekliği */
 }
 
 .header-top {
@@ -224,8 +170,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: hsl(var(--card));
-  border-bottom: 1px solid hsl(var(--border));
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   font-size: 12px;
   font-weight: 600;
 }
@@ -233,24 +179,56 @@ body {
 .usage-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: hsl(var(--muted-foreground));
+  gap: 0;
+  color: #64748b !important;
+}
+
+.usage-count {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .plan-badge {
-  font-weight: 700;
-  color: hsl(var(--primary));
+  padding: 4px 12px;
+  background: #00d4aa !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.plan-badge-usage {
+  display: inline-flex;
+  height: 24px;
+  padding: 0 12px;
+  background: #00d4aa !important;
+  color: #ffffff !important;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.plan-badge-usage:hover {
+  background: #00b894 !important;
 }
 
 .separator {
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
 }
 
 .upgrade-btn {
   height: 24px;
   padding: 0 12px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: #00d4aa !important;
+  color: #ffffff !important;
   border: none;
   border-radius: 9999px;
   font-size: 12px;
@@ -263,7 +241,7 @@ body {
 }
 
 .upgrade-btn:hover {
-  background: hsl(var(--accent));
+  background: #00b894 !important;
 }
 
 .diamond-icon {
@@ -275,9 +253,9 @@ body {
   position: relative;
   display: flex;
   height: 44px;
-  background: hsl(var(--card));
+  background: #ffffff !important;
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid #e2e8f0 !important;
   flex-shrink: 0;
 }
 
@@ -290,7 +268,7 @@ body {
   padding: 0 8px;
   border: none;
   background: transparent;
-  color: hsl(var(--muted-foreground));
+  color: #64748b !important;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -299,11 +277,11 @@ body {
 }
 
 .nav-tab:hover {
-  color: hsl(var(--primary));
+  color: #00d4aa !important;
 }
 
 .nav-tab.active {
-  color: hsl(var(--primary));
+  color: #00d4aa !important;
 }
 
 .nav-icon {
@@ -319,7 +297,7 @@ body {
   position: absolute;
   bottom: 0;
   height: 4px;
-  background: hsl(var(--primary));
+  background: #00d4aa !important;
   transition: all 0.3s ease-out;
   border-radius: 2px 2px 0 0;
 }
@@ -327,45 +305,79 @@ body {
 /* Main Content */
 .main-content {
   flex: 1;
-  background: hsl(var(--background));
+  background: #f8fafc !important;
   padding: 0;
   overflow-y: auto;
-  margin-top: 132px; /* Header yüksekliği kadar margin */
   height: calc(100vh - 132px);
-  padding-bottom: 0; /* Alt padding'i kaldır */
+  padding-bottom: 0;
 }
 
-/* Login page specific - activated by JS */
-.main-content.auth-mode {
-  margin-top: 0;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
+/* Dark theme overrides - Login sayfası mantığı */
+.dark .status-bar {
+  background: #1f2937 !important;
+  border-bottom: 1px solid #374151 !important;
 }
 
-.main-content .app-content {
-  padding: 16px;
-  height: 100%;
-  overflow-y: auto;
+.dark .usage-info {
+  color: #9ca3af !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 400px) {
-  .app-container {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-  
-  .nav-label {
-    display: none;
-  }
-  
-  .nav-tab {
-    padding: 0 4px;
-  }
+.dark .separator {
+  color: #9ca3af !important;
 }
 
+.dark .nav-tabs {
+  background: #1f2937 !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+.dark .nav-tab {
+  color: #9ca3af !important;
+}
+
+.dark .nav-tab:hover {
+  color: #00d4aa !important;
+}
+
+.dark .nav-tab.active {
+  color: #00d4aa !important;
+}
+
+.dark .main-content {
+  background: #111827 !important;
+}
+
+.dark .app-container {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark body {
+  background: #111827 !important;
+  color: #e5e7eb !important;
+}
+
+/* Force green colors regardless of theme */
+.plan-badge-usage,
+.upgrade-btn,
+.nav-indicator {
+  background: #00d4aa !important;
+  color: #ffffff !important;
+}
+
+.plan-badge-usage:hover,
+.upgrade-btn:hover {
+  background: #00b894 !important;
+}
+
+.dark .plan-badge-usage,
+.dark .upgrade-btn,
+.dark .nav-indicator {
+  background: #00d4aa !important;
+  color: #ffffff !important;
+}
+
+.dark .plan-badge-usage:hover,
+.dark .upgrade-btn:hover {
+  background: #00b894 !important;
+}

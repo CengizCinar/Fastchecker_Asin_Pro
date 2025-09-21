@@ -183,6 +183,19 @@
   overflow-y: auto;
 }
 
+/* Hide scrollbar but keep functionality - Modern browsers */
+.results-container {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+}
+
+.results-container::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+}
+
 /* Result Cards */
 .result-card {
   background: hsl(var(--card));
@@ -271,9 +284,15 @@
 .status-badge {
   padding: 4px 8px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   border: 1px solid;
+  text-align: center;
+  min-width: fit-content;
+  max-width: 120px;
+  word-break: break-word;
+  line-height: 1.2;
+  white-space: pre-line;
 }
 
 .status-badge.success {

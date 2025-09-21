@@ -1,46 +1,48 @@
 /* Common Styles - FastChecker Chrome Extension */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* CSS Variables disabled - using hardcoded colors instead */
 :root {
-  /* Light theme colors */
-  --background: 240 10% 97%;
-  --foreground: 220 15% 20%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 15% 20%;
-  --primary: 165 100% 42%; /* #00d4aa */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 15% 90%;
-  --secondary-foreground: 220 15% 20%;
-  --muted: 220 15% 90%;
-  --muted-foreground: 220 15% 50%;
-  --accent: 162 100% 36%; /* #00b894 */
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 220 15% 88%;
-  --input: 220 15% 88%;
-  --ring: 165 100% 42%;
+  /* Light theme colors - DISABLED */
+  --background: 248 250 252; /* #f8fafc */
+  --foreground: 30 41 59; /* #1e293b */
+  --card: 255 255 255; /* #ffffff */
+  --card-foreground: 30 41 59; /* #1e293b */
+  --primary: 0 212 170; /* #00d4aa */
+  --primary-foreground: 255 255 255; /* #ffffff */
+  --secondary: 241 245 249; /* #f1f5f9 */
+  --secondary-foreground: 30 41 59; /* #1e293b */
+  --muted: 241 245 249; /* #f1f5f9 */
+  --muted-foreground: 100 116 139; /* #64748b */
+  --accent: 0 184 148; /* #00b894 */
+  --accent-foreground: 255 255 255; /* #ffffff */
+  --destructive: 239 68 68; /* #ef4444 */
+  --destructive-foreground: 255 255 255; /* #ffffff */
+  --border: 226 232 240; /* #e2e8f0 */
+  --input: 226 232 240; /* #e2e8f0 */
+  --ring: 0 212 170; /* #00d4aa */
   --radius: 0.8rem;
 }
 
 .dark {
-  --background: 220 15% 10%;
-  --foreground: 220 15% 90%;
-  --card: 220 15% 15%;
-  --card-foreground: 220 15% 90%;
-  --primary: 165 100% 42%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 15% 25%;
-  --secondary-foreground: 220 15% 90%;
-  --muted: 220 15% 25%;
-  --muted-foreground: 220 15% 60%;
-  --accent: 162 100% 36%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 220 15% 25%;
-  --input: 220 15% 25%;
-  --ring: 165 100% 42%;
+  /* Dark theme colors - DISABLED */
+  --background: 17 24 39; /* #111827 */
+  --foreground: 229 231 235; /* #e5e7eb */
+  --card: 31 41 55; /* #1f2937 */
+  --card-foreground: 229 231 235; /* #e5e7eb */
+  --primary: 0 212 170; /* #00d4aa */
+  --primary-foreground: 255 255 255; /* #ffffff */
+  --secondary: 55 65 81; /* #374151 */
+  --secondary-foreground: 229 231 235; /* #e5e7eb */
+  --muted: 55 65 81; /* #374151 */
+  --muted-foreground: 156 163 175; /* #9ca3af */
+  --accent: 0 184 148; /* #00b894 */
+  --accent-foreground: 255 255 255; /* #ffffff */
+  --destructive: 220 38 38; /* #dc2626 */
+  --destructive-foreground: 255 255 255; /* #ffffff */
+  --border: 55 65 81; /* #374151 */
+  --input: 55 65 81; /* #374151 */
+  --ring: 0 212 170; /* #00d4aa */
 }
 
 /* Base styles */
@@ -58,11 +60,17 @@ html, body {
 
 body {
   font-family: 'Inter', sans-serif;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: #f8fafc !important;
+  color: #1e293b !important;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme for body */
+.dark body {
+  background: #111827 !important;
+  color: #e5e7eb !important;
 }
 
 .app-container {
@@ -70,11 +78,17 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  background: hsl(var(--card));
+  background: #ffffff !important;
+}
+
+/* Dark theme for app-container */
+.dark .app-container {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
 }
 
 /* Common Form Styles */
@@ -87,7 +101,12 @@ body {
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: hsl(var(--foreground));
+  color: #1a1a1a !important;
+}
+
+/* Force form label colors regardless of theme */
+.dark .form-label {
+  color: #e5e7eb !important;
 }
 
 .form-input {
@@ -143,12 +162,22 @@ body {
 
 .btn.outline {
   background: transparent;
-  color: hsl(var(--foreground));
-  border: 1px solid hsl(var(--border));
+  color: #1a1a1a !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 .btn.outline:hover {
-  background: hsl(var(--secondary));
+  background: #f3f4f6 !important;
+}
+
+/* Force outline button colors regardless of theme */
+.dark .btn.outline {
+  color: #e5e7eb !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .btn.outline:hover {
+  background: #374151 !important;
 }
 
 /* Loading States */

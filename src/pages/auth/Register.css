@@ -1,5 +1,11 @@
 /* Register Page Styles - Özgün sınıf hiyerarşisi ile */
 
+/* CSS Variables for register page */
+:root {
+  --primary: 165 100% 42%; /* #00d4aa */
+  --primary-foreground: 0 0% 100%; /* #ffffff */
+}
+
 .register-view {
   display: flex;
   align-items: center;
@@ -10,7 +16,13 @@
   position: relative;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-foreground)) 100%);
+  background: linear-gradient(135deg, #00d4aa 0%, #ffffff 100%) !important;
+}
+
+/* Force light theme for register section - no dark mode override */
+.register-view,
+.register-view * {
+  color-scheme: light !important;
 }
 
 .register-view .auth-language-toggle {

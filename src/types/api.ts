@@ -9,11 +9,19 @@ export interface ApiResponse<T = any> {
 
 // Subscription Types
 export interface SubscriptionData {
-  currentPlan: string;
-  planName: string;
-  planDescription: string;
-  monthlyLimit: number;
-  usedThisMonth: number;
+  currentPlan: {
+    name: string;
+    code: string;
+    limit: number;
+  };
+  usage?: {
+    current: number;
+    limit: number;
+  };
+  // Legacy fields for backward compatibility
+  planName?: string;
+  monthlyLimit?: number;
+  usedThisMonth?: number;
 }
 
 export interface SubscriptionPlan {
