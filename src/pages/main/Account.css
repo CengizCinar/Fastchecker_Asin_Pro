@@ -23,15 +23,17 @@
 .account-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: var(--radius);
+  border-radius: 16px;
   padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .card-title {
@@ -41,25 +43,51 @@
   margin: 0;
 }
 
+/* Overview Header - new layout */
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.overview-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b !important;
+  margin: 0;
+}
+
 /* Account Overview */
 .overview-card .card-header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .logout-btn {
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
   background: #ef4444 !important;
   color: #ffffff !important;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 25px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px 0 rgba(239, 68, 68, 0.2);
 }
 
 .logout-btn:hover {
   background: #dc2626 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px 0 rgba(239, 68, 68, 0.3);
+}
+
+.logout-icon {
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 .account-profile {
@@ -73,28 +101,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
-  background: #e5e7eb !important;
+  width: 88px;
+  height: 88px;
+  background: #f3f4f6 !important;
   border-radius: 50%;
+  border: 2px solid #e5e7eb;
 }
 
 .avatar-icon {
-  font-size: 1.5rem;
-  color: #6b7280 !important;
+  font-size: 2.5rem;
+  color: #9ca3af !important;
 }
 
 .plan-badge {
   position: absolute;
   bottom: -4px;
-  right: -4px;
+  left: 50%;
+  transform: translateX(-50%);
   background: #00d4aa !important;
   color: #ffffff !important;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 8px;
-  border: 2px solid #ffffff !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 2px solid #ffffff;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 .profile-info {
@@ -102,21 +138,21 @@
 }
 
 .profile-name {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b !important;
+  color: #111827 !important;
   margin: 0 0 4px 0;
 }
 
 .profile-email {
-  font-size: 0.9rem;
-  color: #64748b !important;
-  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: #9ca3af !important;
+  margin: 0 0 8px 0;
 }
 
 .member-since {
-  font-size: 0.85rem;
-  color: #64748b !important;
+  font-size: 0.9rem;
+  color: #9ca3af !important;
   margin: 0;
 }
 
@@ -377,10 +413,15 @@
 .dark .account-card {
   background: #1f2937 !important;
   border: 1px solid #374151 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
 }
 
 .dark .card-title {
   color: #e5e7eb !important;
+}
+
+.dark .overview-title {
+  color: #f9fafb !important;
 }
 
 .dark .profile-avatar {
@@ -388,25 +429,26 @@
 }
 
 .dark .avatar-icon {
-  color: #9ca3af !important;
+  color: #6b7280 !important;
 }
 
 .dark .plan-badge {
   background: #00d4aa !important;
   color: #ffffff !important;
   border: 2px solid #1f2937 !important;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
 }
 
 .dark .profile-name {
-  color: #e5e7eb !important;
+  color: #f9fafb !important;
 }
 
 .dark .profile-email {
-  color: #9ca3af !important;
+  color: #d1d5db !important;
 }
 
 .dark .member-since {
-  color: #9ca3af !important;
+  color: #d1d5db !important;
 }
 
 .dark .stats-period {
@@ -542,6 +584,7 @@ body.dark .account-page .account-container .account-profile .profile-avatar,
 .dark .account-profile .profile-avatar,
 html.dark .profile-avatar {
   background: #374151 !important;
+  border-color: #4b5563 !important;
 }
 
 /* Responsive Design */

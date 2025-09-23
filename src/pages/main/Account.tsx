@@ -258,9 +258,10 @@ export function Account() {
       <div className="account-container">
         {/* Account Overview Card */}
         <div className="account-card overview-card">
-          <div className="card-header">
-            <h3 className="card-title">{t('accountOverview')}</h3>
+          <div className="overview-header">
+            <h3 className="overview-title">{t('accountOverview')}</h3>
             <button className="logout-btn" onClick={handleLogout}>
+              <span className="logout-icon">→</span>
               {t('logout')}
             </button>
           </div>
