@@ -23,8 +23,9 @@
 .account-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: var(--radius);
+  border-radius: 16px;
   padding: 24px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
 }
 
 .card-header {
@@ -47,19 +48,28 @@
 }
 
 .logout-btn {
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: #ef4444 !important;
   color: #ffffff !important;
   border: none;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
 }
 
 .logout-btn:hover {
   background: #dc2626 !important;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35);
+}
+
+.logout-icon {
+  font-size: 1rem;
 }
 
 .account-profile {
