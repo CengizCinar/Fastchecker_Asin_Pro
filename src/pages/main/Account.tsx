@@ -261,8 +261,7 @@ export function Account() {
           <div className="card-header">
             <h3 className="card-title">{t('accountOverview')}</h3>
             <button className="logout-btn" onClick={handleLogout}>
-              <span className="logout-icon">↪</span>
-              <span>{t('logout')}</span>
+              {t('logout')}
             </button>
           </div>
           <div className="account-profile">
