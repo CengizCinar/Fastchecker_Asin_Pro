@@ -38,6 +38,15 @@ export function Account() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [usageStats, setUsageStats] = useState<UsageStats>({
+    current: 0,
+    limit: 0,
+    successRate: 0,
+    sellable: 0,
+    notEligible: 0,
+    approvalRequired: 0
+  });
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   
   // Email change form
   const [emailForm, setEmailForm] = useState({
@@ -85,41 +94,13 @@ export function Account() {
   const loadAccountData = async () => {
     try {
       setIsLoading(true);
-      
-      // Load usage statistics
-      const usageResult = await apiClient.getUsageStats();
-      console.log('🔍 Backend usage statistics response:', usageResult);
-      if (usageResult.success && usageResult.statistics) {
-        const stats = usageResult.statistics;
-        console.log('📊 Processing usage stats:', stats);
 
-        // Get basic usage info
-        const usage = stats.usage || {};
-        const breakdown = stats.thisMonth?.breakdown || {};
-
-        setUsageStats({
-          current: Number(usage.current || 0),
-          limit: Number(usage.limit || -1),
-          successRate: 0, // Not available from backend
-          sellable: Number(breakdown.sellable?.count || 0),
-          notEligible: Number(breakdown.notEligible?.count || 0),
-          approvalRequired: Number(breakdown.approvalRequired?.count || 0)
-        });
-
-        // Set backend percentages
-        setBackendPercentages({
-          sellable: Math.round(breakdown.sellable?.percentage || 0),
-          notEligible: Math.round(breakdown.notEligible?.percentage || 0),
-          approvalRequired: Math.round(breakdown.approvalRequired?.percentage || 0)
-        });
-      }
-      
-      // Load user profile
+      // Load user profile (usage stats now come from SubscriptionContext)
       const profileResult = await apiClient.getUserProfile();
       if (profileResult.success) {
         setUserProfile(profileResult.user);
       }
-      
+
     } catch (error) {
       console.error('Error loading account data:', error);
       showToast(t('failedToLoadAccountData'), 'error');
@@ -259,8 +240,8 @@ export function Account() {
   };
 
   const getUsagePercentage = () => {
-    const limit = Number(usageStats.limit || 0);
-    const current = Number(usageStats.current || 0);
+    const limit = subscriptionData?.usage?.limit || 0;
+    const current = subscriptionData?.usage?.current || 0;
     if (limit === -1) return 0; // Unlimited
     if (limit === 0) return 0;
     return Math.min((current / limit) * 100, 100);
@@ -271,24 +252,12 @@ export function Account() {
     return Math.round(rate * 100);
   };
 
-  // Store backend percentages for efficient access
+  // Store backend percentages for efficient access (no longer needed since using subscription context)
   const [backendPercentages, setBackendPercentages] = useState({
     sellable: 0,
     notEligible: 0,
     approvalRequired: 0
   });
-
-  const getSellablePercentage = () => {
-    return backendPercentages.sellable;
-  };
-
-  const getNotEligiblePercentage = () => {
-    return backendPercentages.notEligible;
-  };
-
-  const getApprovalRequiredPercentage = () => {
-    return backendPercentages.approvalRequired;
-  };
 
   return (
     <div style={{
@@ -394,7 +363,7 @@ export function Account() {
                     border: '0',
                     minWidth: 'max-content'
                   }}>
-                    {getTranslatedPlanName(userProfile?.plan || 'Free Plan')}
+                    {getTranslatedPlanName(subscriptionData?.plan?.name || userProfile?.plan || 'Free Plan')}
                   </div>
                 </div>
                 <div style={{ flex: '1', minWidth: '0' }}>
@@ -491,7 +460,7 @@ export function Account() {
                     fontWeight: '700',
                     color: 'hsl(222, 47%, 11%)'
                   }}>
-                    {(usageStats.current || 0).toLocaleString()}
+                    {(subscriptionData?.usage?.current || 0).toLocaleString()}
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -499,7 +468,7 @@ export function Account() {
                     fontSize: '12px',
                     color: 'hsl(215, 20%, 65%)'
                   }}>
-                    {usageStats.limit === -1 ? '∞ limit' : `${(usageStats.limit || 0).toLocaleString()} limit`}
+                    {subscriptionData?.usage?.limit === -1 ? '∞ limit' : `${(subscriptionData?.usage?.limit || 0).toLocaleString()} limit`}
                   </span>
                 </div>
               </div>
@@ -519,7 +488,7 @@ export function Account() {
                     fontWeight: '700',
                     color: 'hsl(222, 47%, 11%)'
                   }}>
-                    {(usageStats.sellable || 0).toLocaleString()} ({getSellablePercentage()}%)
+                    {(subscriptionData?.statistics?.thisMonth?.breakdown?.sellable?.count || 0).toLocaleString()} ({Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.sellable?.percentage || 0)}%)
                   </span>
                 </div>
                 <div style={{
@@ -531,7 +500,7 @@ export function Account() {
                 }}>
                   <div style={{
                     height: '100%',
-                    width: `${getSellablePercentage()}%`,
+                    width: `${Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.sellable?.percentage || 0)}%`,
                     background: '#22c55e',
                     transition: 'width 0.3s ease'
                   }}></div>
@@ -553,7 +522,7 @@ export function Account() {
                     fontWeight: '700',
                     color: 'hsl(222, 47%, 11%)'
                   }}>
-                    {(usageStats.notEligible || 0).toLocaleString()} ({getNotEligiblePercentage()}%)
+                    {(subscriptionData?.statistics?.thisMonth?.breakdown?.notEligible?.count || 0).toLocaleString()} ({Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.notEligible?.percentage || 0)}%)
                   </span>
                 </div>
                 <div style={{
@@ -565,7 +534,7 @@ export function Account() {
                 }}>
                   <div style={{
                     height: '100%',
-                    width: `${getNotEligiblePercentage()}%`,
+                    width: `${Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.notEligible?.percentage || 0)}%`,
                     background: '#ef4444',
                     transition: 'width 0.3s ease'
                   }}></div>
@@ -587,7 +556,7 @@ export function Account() {
                     fontWeight: '700',
                     color: 'hsl(222, 47%, 11%)'
                   }}>
-                    {(usageStats.approvalRequired || 0).toLocaleString()} ({getApprovalRequiredPercentage()}%)
+                    {(subscriptionData?.statistics?.thisMonth?.breakdown?.approvalRequired?.count || 0).toLocaleString()} ({Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.approvalRequired?.percentage || 0)}%)
                   </span>
                 </div>
                 <div style={{
@@ -599,7 +568,7 @@ export function Account() {
                 }}>
                   <div style={{
                     height: '100%',
-                    width: `${getApprovalRequiredPercentage()}%`,
+                    width: `${Math.round(subscriptionData?.statistics?.thisMonth?.breakdown?.approvalRequired?.percentage || 0)}%`,
                     background: '#f97316',
                     transition: 'width 0.3s ease'
                   }}></div>

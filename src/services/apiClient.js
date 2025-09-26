@@ -178,6 +178,26 @@ class ApiClient {
         }
     }
 
+    async getAvailablePlans() {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/subscription/plans`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to get available plans');
+            }
+
+            return { success: true, plans: data.plans };
+
+        } catch (error) {
+            console.error('Get available plans error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async exportUserData() {
         try {
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
