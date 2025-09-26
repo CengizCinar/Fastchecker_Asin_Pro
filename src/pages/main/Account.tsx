@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useModal } from '../../contexts/ModalContext';
-import './Account.css';
+// No custom CSS - Pure Tailwind
 
 // Import apiClient
 declare const apiClient: any;
@@ -12,6 +12,9 @@ interface UsageStats {
   current: number;
   limit: number;
   successRate: number;
+  sellable?: number;
+  notEligible?: number;
+  approvalRequired?: number;
 }
 
 interface UserProfile {
@@ -28,8 +31,11 @@ export function Account() {
   
   const [usageStats, setUsageStats] = useState<UsageStats>({
     current: 0,
-    limit: 100,
-    successRate: 0
+    limit: -1,
+    successRate: 0,
+    sellable: 0,
+    notEligible: 0,
+    approvalRequired: 0
   });
   
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -54,28 +60,26 @@ export function Account() {
     confirmPassword: ''
   });
 
-  // Helper method to get translated plan name - same as Header component
+  // Helper method to get clean plan name without "PLAN" suffix
   const getTranslatedPlanName = (planName: string) => {
     console.log('🏷️ Account: Translating plan name:', planName);
 
-    // Map backend plan names to translation keys
+    // Map backend plan names to clean translation keys
     const planKeyMap: Record<string, string> = {
-      'Free Plan': 'freePlan',
-      'Basic Plan': 'basicPlan',
-      'Pro Plan': 'proPlan',
-      'Unlimited Plan': 'unlimitedPlan'
+      'Free Plan': 'FREE',
+      'Basic Plan': 'BASIC',
+      'Pro Plan': 'PRO',
+      'Unlimited Plan': 'UNLIMITED'
     };
 
-    const translationKey = planKeyMap[planName];
-    if (translationKey) {
-      const translatedName = t(translationKey);
-      const result = translatedName.toUpperCase();
-      console.log('🏷️ Account: Plan name result:', result);
-      return result;
+    const cleanName = planKeyMap[planName];
+    if (cleanName) {
+      console.log('🏷️ Account: Plan name result:', cleanName);
+      return cleanName;
     }
 
-    // Fallback to uppercase plan name
-    const result = planName.toUpperCase();
+    // Fallback: remove "Plan" and uppercase
+    const result = planName.replace(/\s*Plan\s*/i, '').toUpperCase();
     console.log('🏷️ Account: Plan name fallback result:', result);
     return result;
   };
@@ -92,11 +96,29 @@ export function Account() {
       
       // Load usage statistics
       const usageResult = await apiClient.getUsageStats();
-      if (usageResult.success) {
-        setUsageStats(usageResult.statistics || {
-          current: 0,
-          limit: 100,
-          successRate: 0
+      console.log('🔍 Backend usage statistics response:', usageResult);
+      if (usageResult.success && usageResult.statistics) {
+        const stats = usageResult.statistics;
+        console.log('📊 Processing usage stats:', stats);
+
+        // Get basic usage info
+        const usage = stats.usage || {};
+        const breakdown = stats.thisMonth?.breakdown || {};
+
+        setUsageStats({
+          current: Number(usage.current || 0),
+          limit: Number(usage.limit || -1),
+          successRate: 0, // Not available from backend
+          sellable: Number(breakdown.sellable?.count || 0),
+          notEligible: Number(breakdown.notEligible?.count || 0),
+          approvalRequired: Number(breakdown.approvalRequired?.count || 0)
+        });
+
+        // Set backend percentages
+        setBackendPercentages({
+          sellable: Math.round(breakdown.sellable?.percentage || 0),
+          notEligible: Math.round(breakdown.notEligible?.percentage || 0),
+          approvalRequired: Math.round(breakdown.approvalRequired?.percentage || 0)
         });
       }
       
@@ -245,229 +267,972 @@ export function Account() {
   };
 
   const getUsagePercentage = () => {
-    if (usageStats.limit === -1) return 0; // Unlimited
-    return Math.min((usageStats.current / usageStats.limit) * 100, 100);
+    const limit = Number(usageStats.limit || 0);
+    const current = Number(usageStats.current || 0);
+    if (limit === -1) return 0; // Unlimited
+    if (limit === 0) return 0;
+    return Math.min((current / limit) * 100, 100);
   };
 
   const getSuccessRatePercentage = () => {
-    return Math.round(usageStats.successRate * 100);
+    const rate = Number(usageStats.successRate || 0);
+    return Math.round(rate * 100);
+  };
+
+  // Store backend percentages for efficient access
+  const [backendPercentages, setBackendPercentages] = useState({
+    sellable: 0,
+    notEligible: 0,
+    approvalRequired: 0
+  });
+
+  const getSellablePercentage = () => {
+    return backendPercentages.sellable;
+  };
+
+  const getNotEligiblePercentage = () => {
+    return backendPercentages.notEligible;
+  };
+
+  const getApprovalRequiredPercentage = () => {
+    return backendPercentages.approvalRequired;
   };
 
   return (
-    <div className="account-page">
-      <div className="account-container">
-        {/* Account Overview Card */}
-        <div className="account-card overview-card">
-          <div className="card-header">
-            <h3 className="card-title">{t('accountOverview')}</h3>
-            <button className="logout-btn" onClick={handleLogout}>
-              {t('logout')}
-            </button>
-          </div>
-          <div className="account-profile">
-            <div className="profile-avatar">
-              <span className="avatar-icon">👤</span>
-              <span className="plan-badge">{getTranslatedPlanName(userProfile?.plan || 'Free Plan')}</span>
+    <div style={{
+      width: '100%',
+      height: '100vh',
+      maxWidth: '425px',
+      margin: '0 auto',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Optimized for 425px width sidepanel */}
+      <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Account Profile */}
+          <div style={{
+            background: 'linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 14%, 99%))',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px hsl(220, 13%, 91%, 0.3), 0 2px 4px -2px hsl(220, 13%, 91%, 0.3)',
+            border: '0',
+            animation: 'fadeIn 0.5s ease-in-out'
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingBottom: '16px',
+              padding: '24px 24px 16px 24px'
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'hsl(222, 47%, 11%)',
+                margin: 0
+              }}>
+                {t('accountOverview')}
+              </h3>
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  height: '32px',
+                  padding: '0 12px',
+                  background: 'hsl(0, 84%, 60%)',
+                  color: 'hsl(0, 0%, 98%)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <svg style={{ width: '12px', height: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                {t('logout')}
+              </button>
             </div>
-            <div className="profile-info">
-              <h4 className="profile-name">{getDisplayName()}</h4>
-              <p className="profile-email">{userProfile?.email || currentUser?.email || 'user@example.com'}</p>
-              <p className="member-since">{t('memberSince')}: {getMemberSince()}</p>
+            <div style={{ padding: '0 24px 16px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    height: '56px',
+                    width: '56px',
+                    background: 'hsl(220, 14%, 96%)',
+                    border: '2px solid hsl(220, 13%, 91%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 3px 0 hsl(220, 13%, 91%, 0.3), 0 1px 2px -1px hsl(220, 13%, 91%, 0.3)'
+                  }}>
+                    <svg style={{ width: '24px', height: '24px', color: 'hsl(215, 20%, 65%)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-4px',
+                    right: '-4px',
+                    height: '20px',
+                    padding: '0 6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    background: 'hsl(159, 100%, 42%)',
+                    color: 'hsl(0, 0%, 100%)',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    boxShadow: '0 0 20px hsl(159, 84%, 65%, 0.3)',
+                    border: '0',
+                    minWidth: 'max-content'
+                  }}>
+                    {getTranslatedPlanName(userProfile?.plan || 'Free Plan')}
+                  </div>
+                </div>
+                <div style={{ flex: '1', minWidth: '0' }}>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: 'hsl(222, 47%, 11%)',
+                    marginBottom: '0',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {getDisplayName()}
+                  </h3>
+                  <p style={{
+                    fontSize: '14px',
+                    color: 'hsl(215, 20%, 65%)',
+                    marginBottom: '0',
+                    marginTop: '2px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {userProfile?.email || currentUser?.email || 'user@example.com'}
+                  </p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: 'hsl(215, 20%, 65%)',
+                    marginTop: '4px'
+                  }}>
+                    {t('memberSince')}: {getMemberSince()}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Usage Statistics Card */}
-        <div className="account-card stats-card">
-          <div className="card-header">
-            <h3 className="card-title">{t('usageStatistics')}</h3>
-            <span className="stats-period">{t('thisMonth')}</span>
-          </div>
-          <div className="usage-stats">
-            <div className="stat-item">
-              <div className="stat-header">
-                <span className="stat-label">{t('asinsChecked')}</span>
-                <span className="stat-value">{usageStats.current}</span>
-              </div>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${getUsagePercentage()}%` }}
-                ></div>
-              </div>
-              <div className="stat-limit">
-                <span>{usageStats.limit === -1 ? '∞' : usageStats.limit}</span> <span>{t('limit')}</span>
+          {/* Usage Statistics */}
+          <div style={{
+            background: 'linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 14%, 99%))',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px hsl(220, 13%, 91%, 0.3), 0 2px 4px -2px hsl(220, 13%, 91%, 0.3)',
+            border: '0',
+            animation: 'fadeIn 0.5s ease-in-out'
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingBottom: '16px',
+              padding: '24px 24px 16px 24px'
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: 'hsl(222, 47%, 11%)',
+                margin: 0
+              }}>
+                <svg style={{ width: '20px', height: '20px', color: 'hsl(159, 100%, 42%)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                {t('usageStatistics')}
+              </h3>
+              <div style={{
+                background: 'hsl(220, 14%, 96%)',
+                color: 'hsl(222, 47%, 11%)',
+                fontSize: '12px',
+                fontWeight: '500',
+                padding: '4px 8px',
+                borderRadius: '6px'
+              }}>
+                {t('thisMonth')}
               </div>
             </div>
-            <div className="stat-item">
-              <div className="stat-header">
-                <span className="stat-label">{t('successRate')}</span>
-                <span className="stat-value">{getSuccessRatePercentage()}%</span>
+            <div style={{ padding: '0 24px 24px 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* ASINs Checked */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    {t('asinsChecked')}
+                  </span>
+                  <span style={{
+                    fontSize: '24px',
+                    fontWeight: '700',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    {(usageStats.current || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{
+                    fontSize: '12px',
+                    color: 'hsl(215, 20%, 65%)'
+                  }}>
+                    {usageStats.limit === -1 ? '∞ limit' : `${(usageStats.limit || 0).toLocaleString()} limit`}
+                  </span>
+                </div>
               </div>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill success-progress" 
-                  style={{ width: `${getSuccessRatePercentage()}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Account Settings Card */}
-        <div className="account-card settings-card">
-          <div className="card-header">
-            <h3 className="card-title">{t('accountSettings')}</h3>
+              {/* Sellable */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    SELLABLE
+                  </span>
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    {(usageStats.sellable || 0).toLocaleString()} ({getSellablePercentage()}%)
+                  </span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '8px',
+                  background: 'hsl(220, 14%, 96%)',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${getSellablePercentage()}%`,
+                    background: '#22c55e',
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+              </div>
+
+              {/* Not Eligible */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    NOT ELIGIBLE
+                  </span>
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    {(usageStats.notEligible || 0).toLocaleString()} ({getNotEligiblePercentage()}%)
+                  </span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '8px',
+                  background: 'hsl(220, 14%, 96%)',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${getNotEligiblePercentage()}%`,
+                    background: '#ef4444',
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+              </div>
+
+              {/* Approval Required */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    APPROVAL REQUIRED
+                  </span>
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: 'hsl(222, 47%, 11%)'
+                  }}>
+                    {(usageStats.approvalRequired || 0).toLocaleString()} ({getApprovalRequiredPercentage()}%)
+                  </span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '8px',
+                  background: 'hsl(220, 14%, 96%)',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${getApprovalRequiredPercentage()}%`,
+                    background: '#f97316',
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="settings-options">
-            <button 
-              className="setting-option" 
-              onClick={() => setShowEmailForm(!showEmailForm)}
-            >
-              <span className="setting-icon">📧</span>
-              <span className="setting-label">{t('changeEmail')}</span>
-              <span className="setting-arrow">{showEmailForm ? '▼' : '›'}</span>
-            </button>
-            <button 
-              className="setting-option" 
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-            >
-              <span className="setting-icon">🔒</span>
-              <span className="setting-label">{t('changePassword')}</span>
-              <span className="setting-arrow">{showPasswordForm ? '▼' : '›'}</span>
-            </button>
-          </div>
-          
-          {/* Email Change Form */}
-          {showEmailForm && (
-            <div className="setting-form">
-              <form onSubmit={handleEmailChange}>
-                <div className="form-group">
-                  <label className="form-label">{t('currentEmail')}</label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    value={userProfile?.email || ''} 
-                    readOnly 
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{t('newEmail')}</label>
-                  <input
-                    type="email"
-                    className="form-input"
-                    value={emailForm.newEmail}
-                    onChange={(e) => setEmailForm(prev => ({ ...prev, newEmail: e.target.value }))}
-                    placeholder={t('enterNewEmail')}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{t('currentPassword')}</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    value={emailForm.currentPassword}
-                    onChange={(e) => setEmailForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    placeholder={t('enterCurrentPassword')}
-                    required
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="action-btn primary" disabled={isUpdatingEmail}>
-                    {isUpdatingEmail ? t('updating') : t('updateEmail')}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="action-btn secondary" 
-                    onClick={() => setShowEmailForm(false)}
+
+          {/* Account Settings */}
+          <div style={{
+            background: 'linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 14%, 99%))',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px hsl(220, 13%, 91%, 0.3), 0 2px 4px -2px hsl(220, 13%, 91%, 0.3)',
+            border: '0',
+            animation: 'fadeIn 0.5s ease-in-out'
+          }}>
+            <div style={{ padding: '24px 24px 0 24px' }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'hsl(222, 47%, 11%)',
+                margin: 0
+              }}>
+                {t('accountSettings')}
+              </h3>
+            </div>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Email Settings */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <button
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: 'hsl(220, 14%, 96%)',
+                    border: '1px solid hsl(220, 13%, 91%)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    color: 'hsl(222, 47%, 11%)',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => setShowEmailForm(!showEmailForm)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'hsl(220, 14%, 93%)';
+                    e.currentTarget.style.borderColor = 'hsl(159, 100%, 42%)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'hsl(220, 14%, 96%)';
+                    e.currentTarget.style.borderColor = 'hsl(220, 13%, 91%)';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <svg style={{ width: '16px', height: '16px', color: 'hsl(159, 100%, 42%)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span>{t('changeEmail')}</span>
+                  </div>
+                  <svg
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      color: 'hsl(215, 20%, 65%)',
+                      transition: 'transform 0.2s ease',
+                      transform: showEmailForm ? 'rotate(90deg)' : 'rotate(0deg)'
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    {t('cancel')}
-                  </button>
-                </div>
-              </form>
+                    <polyline points="9,18 15,12 9,6"/>
+                  </svg>
+                </button>
+                {showEmailForm && (
+                  <div style={{ marginTop: '12px' }}>
+                    <form onSubmit={handleEmailChange} style={{
+                      padding: '16px',
+                      background: 'hsl(220, 14%, 96%, 0.3)',
+                      borderRadius: '8px',
+                      border: '1px solid hsl(220, 13%, 91%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '16px'
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('currentEmail')}
+                        </label>
+                        <input
+                          type="email"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(220, 14%, 96%, 0.5)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(215, 20%, 65%)',
+                            fontSize: '14px'
+                          }}
+                          value={userProfile?.email || ''}
+                          readOnly
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('newEmail')}
+                        </label>
+                        <input
+                          type="email"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(0, 0%, 100%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(222, 47%, 11%)',
+                            fontSize: '14px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          value={emailForm.newEmail}
+                          onChange={(e) => setEmailForm(prev => ({ ...prev, newEmail: e.target.value }))}
+                          placeholder={t('enterNewEmail')}
+                          required
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(159, 100%, 42%)';
+                            e.target.style.outline = '2px solid hsl(159, 100%, 42%, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(220, 13%, 91%)';
+                            e.target.style.outline = 'none';
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('currentPassword')}
+                        </label>
+                        <input
+                          type="password"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(0, 0%, 100%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(222, 47%, 11%)',
+                            fontSize: '14px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          value={emailForm.currentPassword}
+                          onChange={(e) => setEmailForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          placeholder={t('enterCurrentPassword')}
+                          required
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(159, 100%, 42%)';
+                            e.target.style.outline = '2px solid hsl(159, 100%, 42%, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(220, 13%, 91%)';
+                            e.target.style.outline = 'none';
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
+                        <button
+                          type="submit"
+                          style={{
+                            flex: '1',
+                            height: '36px',
+                            padding: '0 16px',
+                            background: 'hsl(159, 100%, 42%)',
+                            color: 'hsl(0, 0%, 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s ease',
+                            opacity: isUpdatingEmail ? 0.7 : 1
+                          }}
+                          disabled={isUpdatingEmail}
+                          onMouseEnter={(e) => {
+                            if (!isUpdatingEmail) {
+                              e.currentTarget.style.background = 'hsl(159, 100%, 38%)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isUpdatingEmail) {
+                              e.currentTarget.style.background = 'hsl(159, 100%, 42%)';
+                            }
+                          }}
+                        >
+                          {isUpdatingEmail && (
+                            <svg style={{ width: '12px', height: '12px', animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                            </svg>
+                          )}
+                          {isUpdatingEmail ? t('updating') : t('updateEmail')}
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            flex: '1',
+                            height: '36px',
+                            padding: '0 16px',
+                            background: 'hsl(220, 14%, 96%)',
+                            color: 'hsl(222, 47%, 11%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={() => setShowEmailForm(false)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'hsl(220, 14%, 93%)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'hsl(220, 14%, 96%)';
+                          }}
+                        >
+                          {t('cancel')}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Password Settings */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <button
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: 'hsl(220, 14%, 96%)',
+                    border: '1px solid hsl(220, 13%, 91%)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    color: 'hsl(222, 47%, 11%)',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'hsl(220, 14%, 93%)';
+                    e.currentTarget.style.borderColor = 'hsl(159, 100%, 42%)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'hsl(220, 14%, 96%)';
+                    e.currentTarget.style.borderColor = 'hsl(220, 13%, 91%)';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <svg style={{ width: '16px', height: '16px', color: 'hsl(159, 100%, 42%)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <circle cx="12" cy="16" r="1"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>{t('changePassword')}</span>
+                  </div>
+                  <svg
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      color: 'hsl(215, 20%, 65%)',
+                      transition: 'transform 0.2s ease',
+                      transform: showPasswordForm ? 'rotate(90deg)' : 'rotate(0deg)'
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="9,18 15,12 9,6"/>
+                  </svg>
+                </button>
+                {showPasswordForm && (
+                  <div style={{ marginTop: '12px' }}>
+                    <form onSubmit={handlePasswordChange} style={{
+                      padding: '16px',
+                      background: 'hsl(220, 14%, 96%, 0.3)',
+                      borderRadius: '8px',
+                      border: '1px solid hsl(220, 13%, 91%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '16px'
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('currentPassword')}
+                        </label>
+                        <input
+                          type="password"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(0, 0%, 100%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(222, 47%, 11%)',
+                            fontSize: '14px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          placeholder={t('enterCurrentPassword')}
+                          required
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(159, 100%, 42%)';
+                            e.target.style.outline = '2px solid hsl(159, 100%, 42%, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(220, 13%, 91%)';
+                            e.target.style.outline = 'none';
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('newPassword')}
+                        </label>
+                        <input
+                          type="password"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(0, 0%, 100%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(222, 47%, 11%)',
+                            fontSize: '14px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          placeholder={t('enterNewPassword')}
+                          required
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(159, 100%, 42%)';
+                            e.target.style.outline = '2px solid hsl(159, 100%, 42%, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(220, 13%, 91%)';
+                            e.target.style.outline = 'none';
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: 'hsl(222, 47%, 11%)'
+                        }}>
+                          {t('confirmNewPassword')}
+                        </label>
+                        <input
+                          type="password"
+                          style={{
+                            height: '40px',
+                            padding: '0 12px',
+                            background: 'hsl(0, 0%, 100%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            color: 'hsl(222, 47%, 11%)',
+                            fontSize: '14px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          placeholder={t('confirmNewPasswordPlaceholder')}
+                          required
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(159, 100%, 42%)';
+                            e.target.style.outline = '2px solid hsl(159, 100%, 42%, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(220, 13%, 91%)';
+                            e.target.style.outline = 'none';
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
+                        <button
+                          type="submit"
+                          style={{
+                            flex: '1',
+                            height: '36px',
+                            padding: '0 16px',
+                            background: 'hsl(159, 100%, 42%)',
+                            color: 'hsl(0, 0%, 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s ease',
+                            opacity: isUpdatingPassword ? 0.7 : 1
+                          }}
+                          disabled={isUpdatingPassword}
+                          onMouseEnter={(e) => {
+                            if (!isUpdatingPassword) {
+                              e.currentTarget.style.background = 'hsl(159, 100%, 38%)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isUpdatingPassword) {
+                              e.currentTarget.style.background = 'hsl(159, 100%, 42%)';
+                            }
+                          }}
+                        >
+                          {isUpdatingPassword && (
+                            <svg style={{ width: '12px', height: '12px', animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                            </svg>
+                          )}
+                          {isUpdatingPassword ? t('updating') : t('updatePassword')}
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            flex: '1',
+                            height: '36px',
+                            padding: '0 16px',
+                            background: 'hsl(220, 14%, 96%)',
+                            color: 'hsl(222, 47%, 11%)',
+                            border: '1px solid hsl(220, 13%, 91%)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={() => setShowPasswordForm(false)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'hsl(220, 14%, 93%)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'hsl(220, 14%, 96%)';
+                          }}
+                        >
+                          {t('cancel')}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Data Export */}
+          <div style={{
+            background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+            borderRadius: '16px',
+            border: '1px solid rgba(226, 232, 240, 0.8)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 35px 60px -12px rgba(0, 0, 0, 0.3), 0 8px 25px -5px rgba(0, 0, 0, 0.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+          }}>
+            <div style={{ padding: '24px 24px 16px 24px' }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#111827',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg style={{ width: '20px', height: '20px', color: '#00d4aa' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                {t('exportData')}
+              </h3>
+            </div>
+            <div style={{ padding: '0 24px 24px 24px' }}>
+              <p style={{
+                fontSize: '14px',
+                color: '#6b7280',
+                marginBottom: '16px',
+                lineHeight: '1.5'
+              }}>
+                {t('exportAsinDescription')}
+              </p>
+              <button
+                style={{
+                  height: '46px',
+                  padding: '0 20px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.3s ease',
+                  opacity: isExporting ? 0.7 : 1,
+                  width: '100%'
+                }}
+                onClick={handleExportData}
+                disabled={isExporting}
+                onMouseEnter={(e) => {
+                  if (!isExporting) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isExporting) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
+                  }
+                }}
+              >
+                {isExporting ? (
+                  <>
+                    <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                    </svg>
+                    {t('exporting')}
+                  </>
+                ) : (
+                  <>
+                    <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7,10 12,15 17,10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    {t('downloadCsv')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(255, 255, 255, 0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              zIndex: 1000
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                border: '4px solid #f3f4f6',
+                borderTop: '4px solid #10b981',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <span style={{
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#6b7280'
+              }}>
+                {t('loading')}
+              </span>
             </div>
           )}
-          
-          {/* Password Change Form */}
-          {showPasswordForm && (
-            <div className="setting-form">
-              <form onSubmit={handlePasswordChange}>
-                <div className="form-group">
-                  <label className="form-label">{t('currentPassword')}</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    placeholder={t('enterCurrentPassword')}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{t('newPassword')}</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    placeholder={t('enterNewPassword')}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{t('confirmNewPassword')}</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    placeholder={t('confirmNewPasswordPlaceholder')}
-                    required
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="action-btn primary" disabled={isUpdatingPassword}>
-                    {isUpdatingPassword ? t('updating') : t('updatePassword')}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="action-btn secondary" 
-                    onClick={() => setShowPasswordForm(false)}
-                  >
-                    {t('cancel')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
         </div>
-
-        {/* Data Export Card */}
-        <div className="account-card export-card">
-          <div className="card-header">
-            <h3 className="card-title">{t('exportData')}</h3>
-          </div>
-          <div className="export-info">
-            <p className="export-description">{t('exportAsinDescription')}</p>
-            <button
-              className="action-btn primary full-width"
-              onClick={handleExportData}
-              disabled={isExporting}
-            >
-              <span className="action-icon">📄</span>
-              <span>{isExporting ? t('exporting') : t('downloadCsv')}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="loading-overlay">
-            <div className="loading-spinner"></div>
-            <span>{t('loading')}</span>
-          </div>
-        )}
       </div>
     </div>
   );

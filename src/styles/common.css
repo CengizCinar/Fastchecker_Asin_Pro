@@ -1,6 +1,11 @@
 /* Common Styles - FastChecker Chrome Extension */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* CSS Variables disabled - using hardcoded colors instead */
 :root {
   /* Light theme colors - DISABLED */
@@ -201,6 +206,11 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Error Message */

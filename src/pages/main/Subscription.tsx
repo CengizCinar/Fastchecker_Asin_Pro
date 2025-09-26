@@ -12,12 +12,12 @@ interface ApiClient {
 
 declare const apiClient: ApiClient;
 
-// Ana projeden alınan plan tanımları
+// Legacy proje ile birebir uyumlu plan tanımları (kod ve fiyatlar)
 const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   'FREE': {
     name: 'Free Plan',
     monthlyLimit: 100,
-    price: 0,
+    price: 0.0,
     stripePriceId: null,
     features: [
       '✓ 100 ASIN checks/month',
@@ -28,7 +28,7 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   'BASIC': {
     name: 'Basic Plan',
     monthlyLimit: 1000,
-    price: 29.99,
+    price: 9.99,
     stripePriceId: 'price_basic_monthly',
     features: [
       '✓ 1,000 ASIN checks/month',
@@ -37,11 +37,11 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '✓ Email support'
     ]
   },
-  'PREMIUM': {
-    name: 'Premium Plan',
+  'PRO': {
+    name: 'Pro Plan',
     monthlyLimit: 5000,
-    price: 79.99,
-    stripePriceId: 'price_premium_monthly',
+    price: 29.99,
+    stripePriceId: 'price_pro_monthly',
     features: [
       '✓ 5,000 ASIN checks/month',
       '✓ Manual check enabled',
@@ -49,12 +49,14 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '✓ API access',
       '✓ Bulk processing',
       '✓ Priority support'
-    ]
+    ],
+    // @ts-ignore - featured bayrağı tasarım için kullanılıyor
+    featured: true
   },
   'UNLIMITED': {
     name: 'Unlimited Plan',
     monthlyLimit: -1, // -1 for unlimited
-    price: 199.99,
+    price: 99.99,
     stripePriceId: 'price_unlimited_monthly',
     features: [
       '✓ Unlimited ASIN checks',
@@ -62,8 +64,7 @@ const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '✓ CSV export',
       '✓ API access',
       '✓ Bulk processing',
-      '✓ Priority support',
-      '✓ White label'
+      '✓ Priority support'
     ]
   }
 };
@@ -107,7 +108,7 @@ export function Subscription() {
     const descriptions: Record<string, string> = {
       'FREE': t('freePlanDesc'),
       'BASIC': t('basicPlanDesc'),
-      'PREMIUM': t('proPlanDesc'),
+      'PRO': t('proPlanDesc'),
       'UNLIMITED': t('unlimitedPlanDesc')
     };
     return descriptions[planCode] || t('freePlanDesc');

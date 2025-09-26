@@ -22,10 +22,13 @@ interface LegacySubscriptionData {
   };
 }
 
-interface UserProfileData {
-  monthlyUsageCount: number;
-  email: string;
-  // other user profile fields...
+interface UsageStatisticsData {
+  statistics: {
+    usage: {
+      current: number;
+      limit: number;
+    };
+  };
 }
 import './Header.css';
 
@@ -42,7 +45,7 @@ export function Header({ showNavigation = true }: HeaderProps) {
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { currentTheme, toggleTheme } = useTheme();
   const [subscriptionData, setSubscriptionData] = useState<LegacySubscriptionData | null>(null);
-  const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
+  const [usageData, setUsageData] = useState<UsageStatisticsData | null>(null);
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
   useEffect(() => {
@@ -54,12 +57,17 @@ export function Header({ showNavigation = true }: HeaderProps) {
 
   useEffect(() => {
     const handleUsageUpdate = (event: CustomEvent) => {
-      const usageData = event.detail;
-      if (usageData && userProfileData) {
-        // Legacy gibi userProfileData.monthlyUsageCount update
-        setUserProfileData(prev => prev ? {
+      const updatedUsageData = event.detail;
+      if (updatedUsageData && usageData) {
+        setUsageData(prev => prev ? {
           ...prev,
-          monthlyUsageCount: usageData.current || prev.monthlyUsageCount || 0
+          statistics: {
+            ...prev.statistics,
+            usage: {
+              ...prev.statistics.usage,
+              current: updatedUsageData.current || prev.statistics.usage.current || 0
+            }
+          }
         } : null);
       }
     };
@@ -69,7 +77,7 @@ export function Header({ showNavigation = true }: HeaderProps) {
     return () => {
       window.removeEventListener('usageUpdated', handleUsageUpdate as EventListener);
     };
-  }, [userProfileData]);
+  }, [usageData]);
 
   const loadSubscriptionData = async () => {
     try {
@@ -98,24 +106,24 @@ export function Header({ showNavigation = true }: HeaderProps) {
   const loadUsageData = async () => {
     try {
       setIsLoadingUsage(true);
-      console.log('📊 Loading usage data from backend...');
+      console.log('📊 Loading usage statistics from backend...');
 
-      // Legacy gibi getUserProfile API call
-      const result = await apiClient.getUserProfile();
+      // Use same API as Account page for consistency
+      const result = await apiClient.getUsageStatistics();
 
-      console.log('👤 Backend user profile response:', result);
+      console.log('📈 Backend usage statistics response:', result);
 
       if (result.success) {
-        const profileData = result.user || result.data;
-        if (profileData) {
-          console.log('📈 User profile data from backend:', profileData);
-          setUserProfileData(profileData);
+        const statsData = result.data;
+        if (statsData) {
+          console.log('📊 Usage statistics data from backend:', statsData);
+          setUsageData(statsData);
         }
       } else {
-        console.error('❌ Backend user profile failed:', result.error);
+        console.error('❌ Backend usage statistics failed:', result.error);
       }
     } catch (error) {
-      console.error('💥 Error loading usage data:', error);
+      console.error('💥 Error loading usage statistics:', error);
     } finally {
       setIsLoadingUsage(false);
     }
@@ -194,13 +202,13 @@ export function Header({ showNavigation = true }: HeaderProps) {
             <span className="usage-count">
               {isLoadingUsage ? (
                 'Loading usage...'
-              ) : subscriptionData && userProfileData ? (
+              ) : subscriptionData && usageData ? (
                 <>
                   <span className="plan-badge-usage">
                     {getTranslatedPlanName(subscriptionData.currentPlan?.name || 'Free Plan')}
                   </span>
                   {(() => {
-                    const currentUsage = userProfileData.monthlyUsageCount || 0;
+                    const currentUsage = usageData.statistics?.usage?.current || 0;
                     const usageLimit = subscriptionData.currentPlan?.limit;
                     const limitText = usageLimit === -1 ? '∞' : (usageLimit || 100);
 

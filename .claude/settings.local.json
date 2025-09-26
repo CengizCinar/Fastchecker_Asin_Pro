@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Read(//Users/cengizcinar/Desktop/sidepanel_extension_4_cursor/**)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(./node_modules/.bin/tailwindcss:*)"
     ],
     "deny": [],
     "ask": []
