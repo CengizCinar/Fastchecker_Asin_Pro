@@ -6,7 +6,11 @@
       "Bash(npm run dev:*)",
       "Bash(npm install:*)",
       "Bash(npx tailwindcss init:*)",
-      "Bash(./node_modules/.bin/tailwindcss:*)"
+      "Bash(./node_modules/.bin/tailwindcss:*)",
+      "Bash(git symbolic-ref:*)",
+      "Bash(git add:*)",
+      "Bash(./git-status.sh)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

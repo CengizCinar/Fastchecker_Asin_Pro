@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import { SubscriptionData, SubscriptionPlan, ApiResponse } from '../../types/api';
 import './Subscription.css';
 
@@ -12,68 +13,13 @@ interface ApiClient {
 
 declare const apiClient: ApiClient;
 
-// Legacy proje ile birebir uyumlu plan tanımları (kod ve fiyatlar)
-const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
-  'FREE': {
-    name: 'Free Plan',
-    monthlyLimit: 100,
-    price: 0.0,
-    stripePriceId: null,
-    features: [
-      '✓ 100 ASIN checks/month',
-      '✓ Manual check enabled',
-      '✓ Basic support'
-    ]
-  },
-  'BASIC': {
-    name: 'Basic Plan',
-    monthlyLimit: 1000,
-    price: 9.99,
-    stripePriceId: 'price_basic_monthly',
-    features: [
-      '✓ 1,000 ASIN checks/month',
-      '✓ Manual check enabled',
-      '✓ CSV export',
-      '✓ Email support'
-    ]
-  },
-  'PRO': {
-    name: 'Pro Plan',
-    monthlyLimit: 5000,
-    price: 29.99,
-    stripePriceId: 'price_pro_monthly',
-    features: [
-      '✓ 5,000 ASIN checks/month',
-      '✓ Manual check enabled',
-      '✓ CSV export',
-      '✓ API access',
-      '✓ Bulk processing',
-      '✓ Priority support'
-    ],
-    // @ts-ignore - featured bayrağı tasarım için kullanılıyor
-    featured: true
-  },
-  'UNLIMITED': {
-    name: 'Unlimited Plan',
-    monthlyLimit: -1, // -1 for unlimited
-    price: 99.99,
-    stripePriceId: 'price_unlimited_monthly',
-    features: [
-      '✓ Unlimited ASIN checks',
-      '✓ Manual check enabled',
-      '✓ CSV export',
-      '✓ API access',
-      '✓ Bulk processing',
-      '✓ Priority support'
-    ]
-  }
-};
+// Plans are now fetched from backend via SubscriptionContext
 
 export function Subscription() {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { subscriptionData, isLoading } = useSubscription();
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
 
   useEffect(() => {
     loadSubscriptionData();

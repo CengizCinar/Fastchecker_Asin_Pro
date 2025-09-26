@@ -3,37 +3,8 @@ import { useAppContext } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-interface LegacySubscriptionData {
-  currentPlan: {
-    name: string;
-    limit: number;
-    code: string;
-    price?: number;
-    features?: any;
-  };
-  usage: {
-    current: number;
-    limit: number;
-    resetDate?: string;
-  };
-  subscription?: {
-    endDate: string;
-    isActive: boolean;
-  };
-}
-
-interface UsageStatisticsData {
-  statistics: {
-    usage: {
-      current: number;
-      limit: number;
-    };
-  };
-}
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import './Header.css';
-
-// Import apiClient
-declare const apiClient: any;
 
 interface HeaderProps {
   showNavigation?: boolean;
@@ -44,90 +15,9 @@ export function Header({ showNavigation = true }: HeaderProps) {
   const { currentUser } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { currentTheme, toggleTheme } = useTheme();
-  const [subscriptionData, setSubscriptionData] = useState<LegacySubscriptionData | null>(null);
-  const [usageData, setUsageData] = useState<UsageStatisticsData | null>(null);
-  const [isLoadingUsage, setIsLoadingUsage] = useState(true);
+  const { subscriptionData, isLoading: isLoadingSubscription } = useSubscription();
 
-  useEffect(() => {
-    if (currentUser) {
-      loadSubscriptionData();
-      loadUsageData();
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    const handleUsageUpdate = (event: CustomEvent) => {
-      const updatedUsageData = event.detail;
-      if (updatedUsageData && usageData) {
-        setUsageData(prev => prev ? {
-          ...prev,
-          statistics: {
-            ...prev.statistics,
-            usage: {
-              ...prev.statistics.usage,
-              current: updatedUsageData.current || prev.statistics.usage.current || 0
-            }
-          }
-        } : null);
-      }
-    };
-
-    window.addEventListener('usageUpdated', handleUsageUpdate as EventListener);
-
-    return () => {
-      window.removeEventListener('usageUpdated', handleUsageUpdate as EventListener);
-    };
-  }, [usageData]);
-
-  const loadSubscriptionData = async () => {
-    try {
-      const result = await apiClient.getSubscriptionStatus();
-
-      console.log('🔄 Backend subscription response:', result);
-
-      if (result.success) {
-        // Backend response structure: currentPlan ve usage root level'da geliyor
-        const subscriptionData = {
-          currentPlan: result.currentPlan,
-          usage: result.usage,
-          subscription: result.subscription
-        };
-
-        console.log('📊 Formatted subscription data:', subscriptionData);
-        setSubscriptionData(subscriptionData);
-      } else {
-        console.error('❌ Backend subscription status failed:', result.error);
-      }
-    } catch (error) {
-      console.error('💥 Error loading subscription data:', error);
-    }
-  };
-
-  const loadUsageData = async () => {
-    try {
-      setIsLoadingUsage(true);
-      console.log('📊 Loading usage statistics from backend...');
-
-      // Use same API as Account page for consistency
-      const result = await apiClient.getUsageStatistics();
-
-      console.log('📈 Backend usage statistics response:', result);
-
-      if (result.success) {
-        const statsData = result.data;
-        if (statsData) {
-          console.log('📊 Usage statistics data from backend:', statsData);
-          setUsageData(statsData);
-        }
-      } else {
-        console.error('❌ Backend usage statistics failed:', result.error);
-      }
-    } catch (error) {
-      console.error('💥 Error loading usage statistics:', error);
-    } finally {
-      setIsLoadingUsage(false);
-    }
-  };
+  // No more local subscription loading - using SubscriptionContext
 
   const handleUpgrade = () => {
     chrome.tabs.create({ url: 'https://fastchecker.com/upgrade' });
@@ -145,30 +35,10 @@ export function Header({ showNavigation = true }: HeaderProps) {
     switchTab(tab);
   };
 
-  // Helper method to get translated plan name - uppercase format
-  const getTranslatedPlanName = (planName: string) => {
-    console.log('🏷️ Translating plan name:', planName);
-
-    // Map backend plan names to translation keys
-    const planKeyMap: Record<string, string> = {
-      'Free Plan': 'freePlan',
-      'Basic Plan': 'basicPlan',
-      'Pro Plan': 'proPlan',
-      'Unlimited Plan': 'unlimitedPlan'
-    };
-
-    const translationKey = planKeyMap[planName];
-    if (translationKey) {
-      const translatedName = t(translationKey);
-      const result = translatedName.toUpperCase();
-      console.log('🏷️ Plan name result:', result);
-      return result;
-    }
-
-    // Fallback to uppercase plan name
-    const result = planName.toUpperCase();
-    console.log('🏷️ Plan name fallback result:', result);
-    return result;
+  // Helper method to get clean plan name - remove hardcoded mapping
+  const getCleanPlanName = (planName: string) => {
+    // Remove " Plan" suffix and return uppercase
+    return planName.replace(' Plan', '').toUpperCase();
   };
 
   return (
@@ -200,30 +70,30 @@ export function Header({ showNavigation = true }: HeaderProps) {
         <div className="usage-info">
           {currentUser ? (
             <span className="usage-count">
-              {isLoadingUsage ? (
+              {isLoadingSubscription ? (
                 'Loading usage...'
-              ) : subscriptionData && usageData ? (
+              ) : subscriptionData ? (
                 <>
                   <span className="plan-badge-usage">
-                    {getTranslatedPlanName(subscriptionData.currentPlan?.name || 'Free Plan')}
+                    {getCleanPlanName(subscriptionData.plan?.name || 'Free Plan')}
                   </span>
                   {(() => {
-                    const currentUsage = usageData.statistics?.usage?.current || 0;
-                    const usageLimit = subscriptionData.currentPlan?.limit;
-                    const limitText = usageLimit === -1 ? '∞' : (usageLimit || 100);
+                    const currentUsage = subscriptionData.usage?.current || 0;
+                    const usageLimit = subscriptionData.plan?.monthlyLimit;
+                    const limitText = usageLimit === -1 ? '∞' : usageLimit;
 
                     console.log('📊 Usage display:', {
                       currentUsage,
                       usageLimit,
                       limitText,
-                      planName: subscriptionData.currentPlan?.name
+                      planName: subscriptionData.plan?.name
                     });
 
                     return ` ${currentUsage}/${limitText} ${t('checksUsed')}`;
                   })()}
                 </>
               ) : (
-                '0/100 checks used'
+                'Loading...'
               )}
             </span>
           ) : (

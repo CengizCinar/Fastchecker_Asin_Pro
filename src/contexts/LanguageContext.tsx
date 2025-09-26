@@ -244,32 +244,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'availablePlans': 'Available Plans',
         'monthlyLimit': 'Monthly Limit',
         'usedThisMonth': 'Used This Month',
-        'freePlan': 'Free Plan',
-        'basicPlan': 'Basic Plan',
-        'proPlan': 'Pro Plan',
-        'unlimitedPlan': 'Unlimited Plan',
+        // Plan names now come from backend dynamically
         'perMonth': '/month',
         'mostPopular': 'Most Popular',
         'upgradeToBasic': 'Upgrade to Basic',
         'upgradeToPro': 'Upgrade to Pro',
         'upgradeToUnlimited': 'Upgrade to Unlimited',
-        'basicFeature1': '✓ 1,000 ASIN checks/month',
-        'basicFeature2': '✓ Manual check enabled',
-        'basicFeature3': '✓ CSV export',
-        'basicFeature4': '✓ Email support',
-        'proFeature1': '✓ 5,000 ASIN checks/month',
-        'proFeature2': '✓ Manual check enabled',
-        'proFeature3': '✓ CSV export',
-        'proFeature4': '✓ API access',
-        'proFeature5': '✓ Bulk processing',
-        'proFeature6': '✓ Priority support',
-        'unlimitedFeature1': '✓ Unlimited ASIN checks',
-        'unlimitedFeature2': '✓ Manual check enabled',
-        'unlimitedFeature3': '✓ CSV export',
-        'unlimitedFeature4': '✓ API access',
-        'unlimitedFeature5': '✓ Bulk processing',
-        'unlimitedFeature6': '✓ Priority support',
-        'unlimitedFeature7': '✓ White label',
+        // Plan features now come from backend dynamically
         'upgradeTo': 'Upgrade to',
         'downgradeTo': 'Downgrade to',
         
@@ -277,11 +258,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'success': 'Success',
         'error': 'Error',
         
-        // Plan descriptions
-        'freePlanDesc': 'Basic features with limited checks',
-        'basicPlanDesc': '1,000 monthly checks with email support',
-        'proPlanDesc': '5,000 monthly checks with priority support',
-        'unlimitedPlanDesc': 'Unlimited checks with all features'
+        // Plan descriptions now come from backend dynamically
       },
       tr: {
         // Navigation tabs
@@ -475,10 +452,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'availablePlans': 'Mevcut Planlar',
         'monthlyLimit': 'Aylık Limit',
         'usedThisMonth': 'Bu Ay Kullanılan',
-        'freePlan': 'Ücretsiz Plan',
-        'basicPlan': 'Temel Plan',
-        'proPlan': 'Pro Plan',
-        'unlimitedPlan': 'Sınırsız Plan',
+        // Plan names now come from backend dynamically
         'perMonth': '/ay',
         'mostPopular': 'En Popüler',
         'upgradeToBasic': 'Temel\'e Yükselt',
@@ -510,10 +484,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         
         
         // Plan descriptions
-        'freePlanDesc': 'Sınırlı kontrollerle temel özellikler',
-        'basicPlanDesc': 'E-posta desteği ile 1.000 aylık kontrol',
-        'proPlanDesc': 'Öncelikli destek ile 5.000 aylık kontrol',
-        'unlimitedPlanDesc': 'Tüm özelliklerle sınırsız kontrol'
+        // Plan descriptions now come from backend dynamically
       }
     };
     

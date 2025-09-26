@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useModal } from '../../contexts/ModalContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 // No custom CSS - Pure Tailwind
 
 // Import apiClient
@@ -28,19 +29,10 @@ export function Account() {
   const { t, currentLanguage } = useLanguage();
   const { showToast } = useToast();
   const { showModal } = useModal();
-  
-  const [usageStats, setUsageStats] = useState<UsageStats>({
-    current: 0,
-    limit: -1,
-    successRate: 0,
-    sellable: 0,
-    notEligible: 0,
-    approvalRequired: 0
-  });
-  
+  const { subscriptionData, isLoading: isLoadingSubscription, refreshData } = useSubscription();
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
