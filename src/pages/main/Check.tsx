@@ -181,12 +181,11 @@ export function Check() {
     setIsLoading(false);
     showToast(t('checkedAsinsSuccessfully').replace('{count}', processedCount.toString()), 'success');
     
-    // Update usage data
-    window.dispatchEvent(new CustomEvent('usageUpdated', { 
-      detail: { 
-        current: processedCount, 
-        limit: 1000 // Default limit, should be fetched from subscription
-      } 
+    // Update usage data - limit will be handled by SubscriptionContext
+    window.dispatchEvent(new CustomEvent('usageUpdated', {
+      detail: {
+        current: processedCount
+      }
     }));
   };
 

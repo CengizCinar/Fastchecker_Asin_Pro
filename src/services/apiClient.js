@@ -158,6 +158,26 @@ class ApiClient {
         }
     }
 
+    async getSubscriptionData() {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/user/subscription-data`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to get subscription data');
+            }
+
+            return data; // Already includes success and data fields
+
+        } catch (error) {
+            console.error('Get subscription data error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async exportUserData() {
         try {
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(

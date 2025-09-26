@@ -6,6 +6,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ModalProvider } from './contexts/ModalContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { Header } from './components/layout/Header';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
@@ -24,9 +25,11 @@ function App() {
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <AppProvider>
-                <AppContent />
-              </AppProvider>
+              <SubscriptionProvider>
+                <AppProvider>
+                  <AppContent />
+                </AppProvider>
+              </SubscriptionProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
