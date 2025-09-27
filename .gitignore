@@ -128,3 +128,6 @@ gen/
 
 # Chrome extension
 .web-extension-id
+
+.claude/
+/.claude/
