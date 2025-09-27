@@ -50,13 +50,13 @@ class ApiClient {
         }
     }
 
-    async createCheckoutSession(planId) {
+    async createCheckoutSession(planCode) {
         try {
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
-                `${this.baseURL}/api/subscription/create-checkout-session`,
+                `${this.baseURL}/api/subscription/checkout`,
                 {
                     method: 'POST',
-                    body: JSON.stringify({ planId })
+                    body: JSON.stringify({ planCode })
                 }
             );
 

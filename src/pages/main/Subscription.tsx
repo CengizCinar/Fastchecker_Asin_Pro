@@ -6,7 +6,7 @@ import './Subscription.css';
 
 // API Client interface
 interface ApiClient {
-  createCheckoutSession(planId: string): Promise<{ success: boolean; checkoutUrl?: string; error?: string }>;
+  createCheckoutSession(planCode: string): Promise<{ success: boolean; checkoutUrl?: string; error?: string }>;
   getAvailablePlans(): Promise<{ success: boolean; plans?: any[]; error?: string }>;
 }
 
