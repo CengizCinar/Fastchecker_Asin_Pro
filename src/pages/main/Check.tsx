@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useModal } from '../../contexts/ModalContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import './Check.css';
 
 // Import apiClient and authService
@@ -30,6 +31,7 @@ export function Check() {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const { showModal } = useModal();
+  const { refreshData } = useSubscription();
   
   const [asinInput, setAsinInput] = useState('');
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -182,11 +184,11 @@ export function Check() {
     showToast(t('checkedAsinsSuccessfully').replace('{count}', processedCount.toString()), 'success');
     
     // Update usage data - limit will be handled by SubscriptionContext
-    window.dispatchEvent(new CustomEvent('usageUpdated', {
-      detail: {
-        current: processedCount
-      }
-    }));
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error('Error refreshing subscription data:', error);
+    }
   };
 
   const handleClearResults = () => {

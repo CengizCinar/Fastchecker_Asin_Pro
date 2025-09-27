@@ -22,7 +22,10 @@
       "Bash(psql:*)",
       "Bash(npm run:*)",
       "Bash(tree:*)",
-      "Bash(railway up:*)"
+      "Bash(railway up:*)",
+      "WebSearch",
+      "Bash(curl:*)",
+      "Bash(railway logs:*)"
     ],
     "deny": [],
     "ask": []
