@@ -164,7 +164,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     return () => {
       window.removeEventListener('usageUpdated', handleUsageUpdate as EventListener);
     };
-  }, [subscriptionData]);
+  }, []); // Remove subscriptionData dependency to prevent infinite loop
 
   const value: SubscriptionContextType = {
     subscriptionData,
