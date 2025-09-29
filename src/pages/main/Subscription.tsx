@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import './Subscription.css';
@@ -13,7 +12,6 @@ interface ApiClient {
 declare const apiClient: ApiClient;
 
 export function Subscription() {
-  const { currentUser } = useAuth();
   const { t } = useLanguage();
   const { subscriptionData, isLoading } = useSubscription();
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
@@ -49,7 +47,7 @@ export function Subscription() {
   };
 
   // Generate dynamic description from features JSON
-  const generatePlanDescription = (planCode: string, features: any) => {
+  const generatePlanDescription = (features: any) => {
     if (!features) return '';
 
     const featureList = [];
@@ -130,7 +128,7 @@ export function Subscription() {
           <div className="plan-info">
             <h2 className="plan-title">{currentPlan}</h2>
             <p className="plan-features">
-              {generatePlanDescription(currentPlanCode, currentFeatures)}
+              {generatePlanDescription(currentFeatures)}
             </p>
           </div>
 
