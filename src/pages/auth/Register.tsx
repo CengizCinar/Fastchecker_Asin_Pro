@@ -41,11 +41,11 @@ export function Register({ onSwitchToLogin }: RegisterProps) {
       
       if (result && result.success) {
         if (result.requiresVerification) {
-          // Store email for verification and redirect
+          // Store email for verification and trigger verification mode
           await chrome.storage.local.set({ pendingVerificationEmail: result.email });
           showToast(t('pleaseCheckEmailForVerification'), 'success');
-          // Redirect to verification page
-          window.location.href = `verification.html?email=${encodeURIComponent(result.email)}`;
+          // Trigger re-render to show verification page (handled by AppContent)
+          window.location.reload();
         } else {
           showToast(t('registrationSuccessful'), 'success');
         }
