@@ -116,34 +116,56 @@ export function Subscription() {
     <div className="subscription-container">
       {/* Current Plan */}
       <div className="current-plan-card">
-        <div className="plan-header">
-          <h3 className="current-plan-title">{t('currentPlan')}</h3>
-          <div className="plan-badge-current" id="currentPlanBadge">
+        <div className="plan-status-header">
+          <div className="plan-status-badge">
+            <div className="status-dot"></div>
+            <span>{t('currentPlan')}</span>
+          </div>
+          <div className="plan-code-badge">
             {currentPlanCode}
           </div>
         </div>
-        <div className="plan-details">
-          <h4 className="plan-name" id="planName">
-            {currentPlan}
-          </h4>
-          <p className="plan-description" id="planDescription">
-            {generatePlanDescription(currentPlanCode, currentFeatures)}
-          </p>
-        </div>
-        <div className="usage-stats">
-          <div className="stat-item">
-            <span className="stat-label">{t('monthlyLimit')}</span>
-            <span className="stat-value" id="monthlyLimit">
-              {subscriptionData?.plan?.monthlyLimit === -1
-                ? t('unlimited')
-                : subscriptionData?.plan?.monthlyLimit || 100}
-            </span>
+
+        <div className="plan-overview">
+          <div className="plan-info">
+            <h2 className="plan-title">{currentPlan}</h2>
+            <p className="plan-features">
+              {generatePlanDescription(currentPlanCode, currentFeatures)}
+            </p>
           </div>
-          <div className="stat-item">
-            <span className="stat-label">{t('usedThisMonth')}</span>
-            <span className="stat-value" id="usedThisMonth">
-              {subscriptionData?.usage?.current || 0}
-            </span>
+
+          <div className="plan-price">
+            {subscriptionData?.plan?.price ? (
+              <>
+                <span className="price-amount">${subscriptionData.plan.price}</span>
+                <span className="price-period">/{t('perMonth')}</span>
+              </>
+            ) : (
+              <span className="price-free">{t('planFree')}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="usage-overview">
+          <div className="usage-bar-container">
+            <div className="usage-header">
+              <span className="usage-label">{t('usedThisMonth')}</span>
+              <span className="usage-numbers">
+                {subscriptionData?.usage?.current || 0} / {subscriptionData?.plan?.monthlyLimit === -1
+                  ? t('unlimited')
+                  : subscriptionData?.plan?.monthlyLimit || 100}
+              </span>
+            </div>
+            {subscriptionData?.plan?.monthlyLimit !== -1 && (
+              <div className="usage-bar">
+                <div
+                  className="usage-progress"
+                  style={{
+                    width: `${Math.min(100, ((subscriptionData?.usage?.current || 0) / (subscriptionData?.plan?.monthlyLimit || 100)) * 100)}%`
+                  }}
+                ></div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -176,13 +198,32 @@ export function Subscription() {
                 ))}
               </div>
               <div className="plan-card-footer">
-                <button
-                  className="upgrade-button"
-                  onClick={() => handleUpgrade(plan.code)}
-                  disabled={currentPlanCode === plan.code}
-                >
-                  {currentPlanCode === plan.code ? 'Current Plan' : t('upgrade')}
-                </button>
+                {currentPlanCode === plan.code ? (
+                  <div className="current-plan-indicator">
+                    <div className="current-plan-checkmark">✓</div>
+                    <span>Current Plan</span>
+                  </div>
+                ) : (
+                  <button
+                    className={`upgrade-button ${
+                      // Only show upgrade for higher-tier plans
+                      (currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
+                      (currentPlanCode === 'PRO' && plan.code === 'ELITE')
+                        ? 'upgrade' : 'unavailable'
+                    }`}
+                    onClick={() => handleUpgrade(plan.code)}
+                    disabled={
+                      // Disable if it's not an upgrade path
+                      !((currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
+                        (currentPlanCode === 'PRO' && plan.code === 'ELITE'))
+                    }
+                  >
+                    {(currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
+                     (currentPlanCode === 'PRO' && plan.code === 'ELITE')
+                      ? t('upgrade')
+                      : 'Not Available'}
+                  </button>
+                )}
               </div>
             </div>
           ))}
