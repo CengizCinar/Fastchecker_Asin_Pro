@@ -55,11 +55,17 @@ export const getLanguageTexts = (currentLanguage: Language) => {
       'loading': 'Loading...',
       'checksUsed': 'checks used',
       
-      // Plan descriptions
-      'freePlanDesc': 'Basic features with limited checks',
-      'basicPlanDesc': '1,000 monthly checks with email support',
-      'proPlanDesc': '5,000 monthly checks with priority support',
-      'unlimitedPlanDesc': 'Unlimited checks with all features'
+      // New plan names and common terms
+      'planFree': 'Free',
+      'planPro': 'Pro',
+      'planElite': 'Elite',
+      'monthlyLimit': 'Monthly Limit',
+      'usedThisMonth': 'Used This Month',
+      'availablePlans': 'Available Plans',
+      'mostPopular': 'Most Popular',
+      'perMonth': '/month',
+      'unlimited': 'Unlimited',
+      'checks': 'checks'
     },
     tr: {
       // Navigation tabs
@@ -113,11 +119,17 @@ export const getLanguageTexts = (currentLanguage: Language) => {
       'loading': 'Yükleniyor...',
       'checksUsed': 'kontrol kullanıldı',
       
-      // Plan descriptions
-      'freePlanDesc': 'Sınırlı kontrollerle temel özellikler',
-      'basicPlanDesc': 'E-posta desteği ile 1.000 aylık kontrol',
-      'proPlanDesc': 'Öncelikli destek ile 5.000 aylık kontrol',
-      'unlimitedPlanDesc': 'Tüm özelliklerle sınırsız kontrol'
+      // New plan names and common terms
+      'planFree': 'Ücretsiz',
+      'planPro': 'Pro',
+      'planElite': 'Elite',
+      'monthlyLimit': 'Aylık Limit',
+      'usedThisMonth': 'Bu Ay Kullanılan',
+      'availablePlans': 'Mevcut Planlar',
+      'mostPopular': 'En Popüler',
+      'perMonth': '/ay',
+      'unlimited': 'Sınırsız',
+      'checks': 'kontrol'
     }
   };
   

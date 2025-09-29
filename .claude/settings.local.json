@@ -25,7 +25,10 @@
       "Bash(railway up:*)",
       "WebSearch",
       "Bash(curl:*)",
-      "Bash(railway logs:*)"
+      "Bash(railway logs:*)",
+      "Bash(node:*)",
+      "Bash(pkill:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
