@@ -12,8 +12,6 @@ interface ApiClient {
 
 declare const apiClient: ApiClient;
 
-// Plans are now fetched from backend via SubscriptionContext
-
 export function Subscription() {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
@@ -38,7 +36,6 @@ export function Subscription() {
             name: plan.name,
             price: plan.price === 0 ? 'Free' : `$${plan.price}`,
             monthlyLimit: plan.monthlyLimit,
-            description: plan.description,
             features: plan.features || {},
             featured: plan.code === 'PRO' // Mark PRO as featured
           }));
@@ -51,14 +48,34 @@ export function Subscription() {
     }
   };
 
-  const getPlanDescription = (planCode: string) => {
-    const descriptions: Record<string, string> = {
-      'FREE': t('freePlanDesc'),
-      'BASIC': t('basicPlanDesc'),
-      'PRO': t('proPlanDesc'),
-      'UNLIMITED': t('unlimitedPlanDesc')
-    };
-    return descriptions[planCode] || t('freePlanDesc');
+  // Generate dynamic description from features JSON
+  const generatePlanDescription = (planCode: string, features: any) => {
+    if (!features) return '';
+
+    const featureList = [];
+
+    // Add features based on JSON
+    if (features.csv_export) featureList.push('CSV Export');
+    if (features.monthly_data_export) featureList.push('Monthly Data Export');
+    if (features.bulk_processing) featureList.push('Bulk Processing');
+    if (features.manual_check) featureList.push('Manual Check Support');
+    if (features.manual_check_support) featureList.push('Technical Support');
+
+    return featureList.length > 0 ? featureList.join(', ') : 'Basic features';
+  };
+
+  const getFeatureDisplayList = (features: any) => {
+    if (!features) return [];
+
+    const displayFeatures = [];
+
+    if (features.csv_export) displayFeatures.push('✓ CSV Export');
+    if (features.monthly_data_export) displayFeatures.push('✓ Monthly Data Export');
+    if (features.bulk_processing) displayFeatures.push('✓ Bulk Processing');
+    if (features.manual_check) displayFeatures.push('✓ Manual Check');
+    if (features.manual_check_support) displayFeatures.push('✓ Technical Support');
+
+    return displayFeatures;
   };
 
   const handleUpgrade = async (planCode: string) => {
@@ -90,8 +107,10 @@ export function Subscription() {
     );
   }
 
-  const currentPlan = subscriptionData?.plan?.name || 'Free Plan';
+  // Current plan data from subscription context
+  const currentPlan = subscriptionData?.plan?.name || 'Free';
   const currentPlanCode = subscriptionData?.plan?.code || 'FREE';
+  const currentFeatures = subscriptionData?.plan?.features || {};
 
   return (
     <div className="subscription-container">
@@ -108,7 +127,7 @@ export function Subscription() {
             {currentPlan}
           </h4>
           <p className="plan-description" id="planDescription">
-            {subscriptionData?.plan?.description || getPlanDescription(currentPlanCode)}
+            {generatePlanDescription(currentPlanCode, currentFeatures)}
           </p>
         </div>
         <div className="usage-stats">
@@ -116,7 +135,7 @@ export function Subscription() {
             <span className="stat-label">{t('monthlyLimit')}</span>
             <span className="stat-value" id="monthlyLimit">
               {subscriptionData?.plan?.monthlyLimit === -1
-                ? '∞'
+                ? t('unlimited')
                 : subscriptionData?.plan?.monthlyLimit || 100}
             </span>
           </div>
@@ -146,32 +165,25 @@ export function Subscription() {
               </div>
               <div className="plan-features">
                 <div className="feature-item">
-                  {plan.monthlyLimit === -1 ? 'Unlimited checks' : `${(plan.monthlyLimit || 0).toLocaleString()} checks per month`}
+                  {plan.monthlyLimit === -1
+                    ? `${t('unlimited')} ${t('checks')}`
+                    : `${(plan.monthlyLimit || 0).toLocaleString()} ${t('checks')} ${t('perMonth')}`}
                 </div>
-                <div className="feature-item">{plan.description}</div>
-                {/* Add more features based on plan.features object */}
-                {plan.features.manual_check && <div className="feature-item">✓ Manual checking</div>}
-                {plan.features.csv_export && <div className="feature-item">✓ CSV export</div>}
-                {plan.features.api_access && <div className="feature-item">✓ API access</div>}
-                {plan.features.bulk_processing && <div className="feature-item">✓ Bulk processing</div>}
-                {plan.features.priority_support && <div className="feature-item">✓ Priority support</div>}
-                {plan.features.white_label && <div className="feature-item">✓ White label</div>}
+                {getFeatureDisplayList(plan.features).map((feature, index) => (
+                  <div key={index} className="feature-item">
+                    {feature}
+                  </div>
+                ))}
               </div>
-              <button
-                className={`plan-upgrade-btn ${
-                  currentPlanCode === plan.code ? 'current-plan-btn' :
-                  currentPlanCode === 'UNLIMITED' && plan.code !== 'UNLIMITED' ? 'downgrade-btn' : ''
-                }`}
-                onClick={() => handleUpgrade(plan.code)}
-                disabled={currentPlanCode === plan.code}
-              >
-                <span className="diamond-icon">💎</span>
-                <span>
-                  {currentPlanCode === plan.code ? t('currentPlan') :
-                   currentPlanCode === 'UNLIMITED' && plan.code !== 'UNLIMITED' ? `${t('downgradeTo')} ${plan.name}` :
-                   `${t('upgradeTo')} ${plan.name}`}
-                </span>
-              </button>
+              <div className="plan-card-footer">
+                <button
+                  className="upgrade-button"
+                  onClick={() => handleUpgrade(plan.code)}
+                  disabled={currentPlanCode === plan.code}
+                >
+                  {currentPlanCode === plan.code ? 'Current Plan' : t('upgrade')}
+                </button>
+              </div>
             </div>
           ))}
         </div>

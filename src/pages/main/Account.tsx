@@ -67,10 +67,9 @@ export function Account() {
 
     // Map backend plan names to clean translation keys
     const planKeyMap: Record<string, string> = {
-      'Free Plan': 'FREE',
-      'Basic Plan': 'BASIC',
-      'Pro Plan': 'PRO',
-      'Unlimited Plan': 'UNLIMITED'
+      'Free': 'FREE',
+      'Pro': 'PRO',
+      'Elite': 'ELITE'
     };
 
     const cleanName = planKeyMap[planName];
