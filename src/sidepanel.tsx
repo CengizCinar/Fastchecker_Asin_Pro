@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
+import { AppProvider, useAppContext } from './contexts/AppContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -40,9 +40,11 @@ function App() {
 
 function AppContent() {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
-  
+  const { switchTab } = useAppContext();
+
   // Check if user needs verification
   const [needsVerification, setNeedsVerification] = React.useState(false);
+  const [hasCheckedApiSettings, setHasCheckedApiSettings] = React.useState(false);
   
   React.useEffect(() => {
     const checkVerificationStatus = async () => {
@@ -60,6 +62,44 @@ function AppContent() {
     
     checkVerificationStatus();
   }, []);
+
+  // Check SP-API settings after authentication
+  React.useEffect(() => {
+    const checkApiSettings = async () => {
+      if (isAuthenticated && !isLoading && !needsVerification && !hasCheckedApiSettings) {
+        try {
+          // Import apiClient dynamically
+          const apiClient = (window as any).apiClient;
+          if (!apiClient) {
+            console.warn('apiClient not available yet');
+            return;
+          }
+
+          const result = await apiClient.getSettings();
+          if (result.success) {
+            const settings = result.settings;
+            // Check if all required API settings are configured
+            const hasApiSettings = settings &&
+              settings.refreshToken &&
+              settings.clientId &&
+              settings.clientSecret &&
+              settings.sellerId;
+
+            if (!hasApiSettings) {
+              // Redirect to settings page if API settings are not configured
+              switchTab('settings');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking API settings on startup:', error);
+        } finally {
+          setHasCheckedApiSettings(true);
+        }
+      }
+    };
+
+    checkApiSettings();
+  }, [isAuthenticated, isLoading, needsVerification, hasCheckedApiSettings, switchTab]);
 
   if (isLoading) {
     return (
@@ -82,7 +122,7 @@ function AppContent() {
     return (
       <div className="app-container">
         <div className="main-content auth-mode">
-          <Verification />
+          <Verification switchTab={(tab) => switchTab(tab as 'check' | 'settings' | 'account' | 'subscription')} />
         </div>
       </div>
     );
@@ -92,7 +132,7 @@ function AppContent() {
     return (
       <div className="app-container">
         <div className="main-content auth-mode">
-          <Login />
+          <Login switchTab={(tab) => switchTab(tab as 'check' | 'settings' | 'account' | 'subscription')} />
         </div>
       </div>
     );

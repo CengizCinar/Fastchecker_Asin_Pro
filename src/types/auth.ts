@@ -14,10 +14,10 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
-  register: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string; requiresVerification?: boolean; message?: string }>;
+  login: (email: string, password: string, switchTab?: (tab: string) => void) => Promise<{ success: boolean; user?: User; error?: string; requiresVerification?: boolean; userNotFound?: boolean; email?: string }>;
+  register: (email: string, password: string, switchTab?: (tab: string) => void) => Promise<{ success: boolean; user?: User; error?: string; requiresVerification?: boolean; message?: string; email?: string }>;
   logout: () => Promise<void>;
-  verifyEmail: (code: string) => Promise<void>;
+  verifyEmail: (code: string, switchTab?: (tab: string) => void) => Promise<void>;
   resendVerificationCode: (email: string) => Promise<void>;
   clearError: () => void;
 }

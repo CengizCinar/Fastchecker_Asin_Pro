@@ -579,15 +579,15 @@ input:checked + .slider:before {
 }
 
 .sp-api-save-btn.enabled {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.2);
+  background: #22c55e; /* Dinamik yeşil renk */
+  color: white;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
 }
 
 .sp-api-save-btn.enabled:hover {
-  background: hsl(var(--accent));
+  background: #16a34a; /* Hover'da daha koyu yeşil */
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
 }
 
 .sp-api-save-btn.enabled:active {
@@ -603,4 +603,15 @@ input:checked + .slider:before {
 
 [data-theme="dark"] .sp-api-save-section {
   border-top-color: hsl(var(--border));
+}
+
+[data-theme="dark"] .sp-api-save-btn.enabled {
+  background: #22c55e; /* Dark mode'da da aynı yeşil */
+  color: white;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .sp-api-save-btn.enabled:hover {
+  background: #16a34a; /* Dark mode hover */
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }

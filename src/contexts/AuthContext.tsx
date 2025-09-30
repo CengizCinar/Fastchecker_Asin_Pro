@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AuthContextType, User } from '../types/auth';
 
-// Import the existing authService
+// Import the existing authService and apiClient
 declare const authService: any;
+declare const apiClient: any;
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -56,6 +57,34 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to check if SP-API settings are configured
+const checkApiSettingsAndRedirect = async (switchTab?: (tab: string) => void) => {
+  try {
+    const result = await apiClient.getSettings();
+    if (result.success) {
+      const settings = result.settings;
+      // Check if all required API settings are configured
+      const hasApiSettings = settings &&
+        settings.refreshToken &&
+        settings.clientId &&
+        settings.clientSecret &&
+        settings.sellerId;
+
+      if (!hasApiSettings && switchTab) {
+        // Redirect to settings page if API settings are not configured
+        setTimeout(() => {
+          switchTab('settings');
+        }, 500); // Small delay to allow login success toast to show
+        return false;
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('Error checking API settings:', error);
+    return true; // Don't redirect on error
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -79,19 +108,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, switchTab?: (tab: string) => void) => {
     // Don't set global loading state - let component handle its own loading
     dispatch({ type: 'CLEAR_ERROR' });
 
     try {
       const result = await authService.login(email, password);
-      
+
       if (result.success) {
         dispatch({ type: 'SET_USER', payload: result.user });
+
+        // Check if SP-API settings are configured after successful login
+        await checkApiSettingsAndRedirect(switchTab);
+
         return { success: true, user: result.user };
       } else {
         dispatch({ type: 'SET_ERROR', payload: result.error });
-        return { success: false, error: result.error };
+        return result; // Return the complete result for requiresVerification and userNotFound handling
       }
     } catch (error) {
       const errorMessage = 'Login failed';
@@ -100,18 +133,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, switchTab?: (tab: string) => void) => {
     // Don't set global loading state - let component handle its own loading
     dispatch({ type: 'CLEAR_ERROR' });
 
     try {
       const result = await authService.register(email, password);
-      
+
       if (result.success) {
         if (result.requiresVerification) {
           return { success: true, requiresVerification: true, message: result.message };
         } else {
           dispatch({ type: 'SET_USER', payload: result.user });
+
+          // Check if SP-API settings are configured after successful registration
+          await checkApiSettingsAndRedirect(switchTab);
+
           return { success: true, user: result.user };
         }
       } else {
@@ -137,15 +174,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifyEmail = async (code: string) => {
+  const verifyEmail = async (code: string, switchTab?: (tab: string) => void) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'CLEAR_ERROR' });
 
     try {
       const result = await authService.verifyEmail('', code);
-      
+
       if (result.success) {
         dispatch({ type: 'SET_USER', payload: result.user });
+
+        // Check if SP-API settings are configured after successful email verification
+        await checkApiSettingsAndRedirect(switchTab);
+
       } else {
         dispatch({ type: 'SET_ERROR', payload: result.error });
       }

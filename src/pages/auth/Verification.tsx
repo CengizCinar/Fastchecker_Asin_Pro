@@ -3,7 +3,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './Verification.css';
 
-export function Verification() {
+interface VerificationProps {
+  switchTab?: (tab: string) => void;
+}
+
+export function Verification({ switchTab }: VerificationProps) {
   const { verifyEmail, resendVerificationCode, isLoading, error, clearError } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
@@ -108,11 +112,11 @@ export function Verification() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    
+
     const code = verificationCode.join('');
     if (code.length !== 6) return;
-    
-    await verifyEmail(code);
+
+    await verifyEmail(code, switchTab);
   };
 
   const handleResend = async () => {

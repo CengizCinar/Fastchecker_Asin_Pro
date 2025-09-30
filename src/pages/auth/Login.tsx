@@ -7,9 +7,10 @@ import './Login.css';
 
 interface LoginProps {
   onSwitchToRegister?: () => void;
+  switchTab?: (tab: string) => void;
 }
 
-export function Login({ onSwitchToRegister }: LoginProps) {
+export function Login({ onSwitchToRegister, switchTab }: LoginProps) {
   const { login, isLoading, error, clearError } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { showToast } = useToast();
@@ -17,6 +18,13 @@ export function Login({ onSwitchToRegister }: LoginProps) {
   const [password, setPassword] = useState('');
   const [showRegister, setShowRegister] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: email, 2: code + password
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetUserId, setResetUserId] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleLanguageToggle = () => {
     setLanguage(currentLanguage === 'en' ? 'tr' : 'en');
@@ -33,18 +41,18 @@ export function Login({ onSwitchToRegister }: LoginProps) {
 
     setIsSubmitting(true);
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, switchTab);
       
       if (result && result.success) {
         showToast(t('loginSuccessful'), 'success');
       } else if (result && result.requiresVerification) {
         // Store email for verification and redirect
-        await chrome.storage.local.set({ pendingVerificationEmail: result.email });
+        await chrome.storage.local.set({ pendingVerificationEmail: result.email || email });
         showToast(t('pleaseCheckEmailForVerification'), 'success');
         // Redirect to verification page
-        window.location.href = `verification.html?email=${encodeURIComponent(result.email)}`;
+        window.location.href = `verification.html?email=${encodeURIComponent(result.email || email)}`;
       } else if (result && result.userNotFound) {
-        showToast(result.error, 'error');
+        showToast(result.error || 'User not found', 'error');
         // Optionally show register form
       } else if (result && result.error) {
         showToast(result.error, 'error');
@@ -66,8 +74,99 @@ export function Login({ onSwitchToRegister }: LoginProps) {
     }
   };
 
+  const handleForgotPassword = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPasswordReset(true);
+    setResetStep(1);
+  };
+
+  const handlePasswordResetStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetEmail) {
+      showToast(t('pleaseFillAllFields'), 'error');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await fetch('https://professionalfastchecker-production.up.railway.app/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: resetEmail
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reset code');
+      }
+
+      setResetUserId(data.userId);
+      setResetStep(2);
+      showToast(t('resetCodeSent'), 'success');
+
+    } catch (error) {
+      showToast((error as Error).message || 'Failed to send reset code', 'error');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handlePasswordResetStep2 = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetCode || !newPassword) {
+      showToast(t('pleaseFillAllFields'), 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showToast(t('passwordMinLength'), 'error');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await fetch('https://professionalfastchecker-production.up.railway.app/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: resetUserId,
+          resetCode: resetCode,
+          newPassword: newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Password reset failed');
+      }
+
+      showToast(t('resetPasswordSuccess'), 'success');
+      setShowPasswordReset(false);
+      setResetStep(1);
+      setResetEmail('');
+      setResetCode('');
+      setNewPassword('');
+      setResetUserId('');
+
+    } catch (error) {
+      showToast((error as Error).message || 'Password reset failed', 'error');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   if (showRegister) {
-    return <Register onSwitchToLogin={() => setShowRegister(false)} />;
+    return <Register onSwitchToLogin={() => setShowRegister(false)} switchTab={switchTab} />;
   }
 
   return (
@@ -122,6 +221,11 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                 required
                 disabled={isSubmitting}
               />
+              <div className="form-forgot-password">
+                <a href="javascript:void(0)" onClick={handleForgotPassword} className="auth-link">
+                  {t('forgotPassword')}
+                </a>
+              </div>
             </div>
             
             <button 
@@ -143,6 +247,126 @@ export function Login({ onSwitchToRegister }: LoginProps) {
           </p>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal">
+            <div className="auth-modal-header">
+              <h3>{resetStep === 1 ? t('resetPassword') : t('verifyResetCode')}</h3>
+              <button
+                className="auth-modal-close"
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  setResetStep(1);
+                  setResetEmail('');
+                  setResetCode('');
+                  setNewPassword('');
+                  setResetUserId('');
+                }}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            {resetStep === 1 ? (
+              <form onSubmit={handlePasswordResetStep1} className="auth-form">
+                <div className="form-group">
+                  <label htmlFor="resetEmail" className="form-label">{t('email')}</label>
+                  <input
+                    type="email"
+                    id="resetEmail"
+                    className="form-input"
+                    placeholder={t('emailPlaceholder')}
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                    disabled={isResetting}
+                  />
+                  <small className="form-help-text">
+                    {t('resetCodeSent')}
+                  </small>
+                </div>
+
+                <div className="auth-modal-actions">
+                  <button
+                    type="button"
+                    className="auth-btn secondary"
+                    onClick={() => setShowPasswordReset(false)}
+                    disabled={isResetting}
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="auth-btn primary"
+                    disabled={isResetting}
+                  >
+                    {isResetting ? t('sending') : t('sendResetCode')}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handlePasswordResetStep2} className="auth-form">
+                <div className="form-group">
+                  <label htmlFor="resetCode" className="form-label">{t('resetCode')}</label>
+                  <input
+                    type="text"
+                    id="resetCode"
+                    className="form-input"
+                    placeholder={t('enterResetCode')}
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    required
+                    disabled={isResetting}
+                    maxLength={6}
+                  />
+                  <small className="form-help-text">
+                    {t('codeSentTo')} {resetEmail}
+                  </small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="newPassword" className="form-label">{t('newPassword')}</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    className="form-input"
+                    placeholder={t('enterNewPasswordReset')}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    disabled={isResetting}
+                    minLength={8}
+                  />
+                  <small className="form-help-text">
+                    {t('passwordMinLength')}
+                  </small>
+                </div>
+
+                <div className="auth-modal-actions">
+                  <button
+                    type="button"
+                    className="auth-btn secondary"
+                    onClick={() => setResetStep(1)}
+                    disabled={isResetting}
+                  >
+                    {t('back')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="auth-btn primary"
+                    disabled={isResetting}
+                  >
+                    {isResetting ? t('resetting') : t('resetPassword')}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
