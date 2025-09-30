@@ -49,6 +49,17 @@ export interface SubscriptionInfo {
   isActive: boolean;
 }
 
+export interface BillingInfo {
+  currentPlan: string;
+  subscriptionEndDate: string;
+  remainingDays: number;
+  pendingChange: {
+    targetPlan: string;
+    effectiveDate: string;
+    status: string;
+  } | null;
+}
+
 export interface SubscriptionData {
   plan: SubscriptionPlan;
   usage: UsageData;
@@ -58,10 +69,13 @@ export interface SubscriptionData {
 
 interface SubscriptionContextType {
   subscriptionData: SubscriptionData | null;
+  billingInfo: BillingInfo | null;
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
+  refreshBillingInfo: () => Promise<void>;
   updateUsage: (newUsage: number) => void;
+  hasPendingChange: (targetPlan: string) => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -81,12 +95,30 @@ interface SubscriptionProviderProps {
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
   const { currentUser } = useAuth();
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
+  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const refreshBillingInfo = async () => {
+    if (!currentUser) {
+      setBillingInfo(null);
+      return;
+    }
+
+    try {
+      const result = await apiClient.getBillingInfo();
+      if (result.success) {
+        setBillingInfo(result);
+      }
+    } catch (error) {
+      console.error('Error loading billing info:', error);
+    }
+  };
 
   const refreshData = async () => {
     if (!currentUser) {
       setSubscriptionData(null);
+      setBillingInfo(null);
       setIsLoading(false);
       return;
     }
@@ -97,17 +129,24 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
       console.log('📊 Loading unified subscription data...');
 
-      // Use the new unified subscription data endpoint
-      const result = await apiClient.getSubscriptionData();
+      // Load both subscription data and billing info in parallel
+      const [subscriptionResult, billingResult] = await Promise.all([
+        apiClient.getSubscriptionData(),
+        apiClient.getBillingInfo()
+      ]);
 
-      console.log('📈 Unified subscription data response:', result);
+      console.log('📈 Unified subscription data response:', subscriptionResult);
 
-      if (result.success && result.data) {
-        setSubscriptionData(result.data);
+      if (subscriptionResult.success && subscriptionResult.data) {
+        setSubscriptionData(subscriptionResult.data);
         console.log('✅ Subscription data loaded successfully');
       } else {
-        console.error('❌ Failed to load subscription data:', result.error);
-        setError(result.error || 'Failed to load subscription data');
+        console.error('❌ Failed to load subscription data:', subscriptionResult.error);
+        setError(subscriptionResult.error || 'Failed to load subscription data');
+      }
+
+      if (billingResult.success) {
+        setBillingInfo(billingResult);
       }
     } catch (error) {
       console.error('💥 Error loading subscription data:', error);
@@ -115,6 +154,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const hasPendingChange = (targetPlan: string): boolean => {
+    return billingInfo?.pendingChange?.targetPlan === targetPlan;
   };
 
   const updateUsage = (newUsage: number) => {
@@ -168,10 +211,13 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   const value: SubscriptionContextType = {
     subscriptionData,
+    billingInfo,
     isLoading,
     error,
     refreshData,
-    updateUsage
+    refreshBillingInfo,
+    updateUsage,
+    hasPendingChange
   };
 
   return (

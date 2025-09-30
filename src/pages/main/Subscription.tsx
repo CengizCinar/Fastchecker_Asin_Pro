@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useToast } from '../../contexts/ToastContext';
 import './Subscription.css';
 
 // API Client interface
 interface ApiClient {
   createCheckoutSession(planCode: string): Promise<{ success: boolean; checkoutUrl?: string; error?: string }>;
   getAvailablePlans(): Promise<{ success: boolean; plans?: any[]; error?: string }>;
+  downgradePlan(targetPlan: string): Promise<{ success: boolean; error?: string }>;
+  cancelSubscription(): Promise<{ success: boolean; error?: string }>;
+  getBillingInfo(): Promise<{ success: boolean; error?: string }>;
 }
 
 declare const apiClient: ApiClient;
 
 export function Subscription() {
   const { t } = useLanguage();
-  const { subscriptionData, isLoading } = useSubscription();
+  const { subscriptionData, billingInfo, isLoading, refreshData, hasPendingChange } = useSubscription();
+  const { showToast } = useToast();
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [isProcessingPlanChange, setIsProcessingPlanChange] = useState(false);
 
   useEffect(() => {
     loadAvailablePlans();
@@ -26,9 +32,8 @@ export function Subscription() {
       setIsLoadingPlans(true);
       const result = await apiClient.getAvailablePlans();
       if (result.success && result.plans) {
-        // Filter out FREE plan and format for display
+        // Include all plans including FREE and format for display
         const formattedPlans = result.plans
-          .filter(plan => plan.code !== 'FREE')
           .map(plan => ({
             code: plan.code,
             name: plan.name,
@@ -76,29 +81,63 @@ export function Subscription() {
     return displayFeatures;
   };
 
-  const handleUpgrade = async (planCode: string) => {
+  const handlePlanChange = async (planCode: string) => {
     try {
-      const result = await apiClient.createCheckoutSession(planCode);
-      if (result.success && result.checkoutUrl) {
-        // Open checkout URL in new tab
-        chrome.tabs.create({ url: result.checkoutUrl });
+      setIsProcessingPlanChange(true);
+
+      // Determine if this is an upgrade, downgrade, or cancel
+      const isUpgrade = (currentPlanCode === 'FREE' && (planCode === 'PRO' || planCode === 'ELITE')) ||
+                       (currentPlanCode === 'PRO' && planCode === 'ELITE');
+
+      const isDowngrade = (currentPlanCode === 'PRO' && planCode === 'FREE') ||
+                         (currentPlanCode === 'ELITE' && (planCode === 'FREE' || planCode === 'PRO'));
+
+      if (isUpgrade) {
+        // Upgrade: Use Stripe checkout
+        const result = await apiClient.createCheckoutSession(planCode);
+        if (result.success && result.checkoutUrl) {
+          chrome.tabs.create({ url: result.checkoutUrl });
+          showToast('Redirecting to payment page...', 'info');
+        } else {
+          showToast(result.error || 'Failed to create checkout session', 'error');
+        }
+      } else if (isDowngrade) {
+        // Downgrade or Cancel: Use direct API call
+        if (planCode === 'FREE') {
+          // Cancel subscription (downgrade to FREE)
+          const result = await apiClient.cancelSubscription();
+          if (result.success) {
+            showToast('Subscription cancelled successfully! You will be downgraded to Free plan at the end of your billing cycle.', 'success');
+            // Refresh subscription data to show updated status
+            await refreshData();
+          } else {
+            showToast(result.error || 'Failed to cancel subscription', 'error');
+          }
+        } else {
+          // Downgrade to paid plan
+          const result = await apiClient.downgradePlan(planCode);
+          if (result.success) {
+            const planName = availablePlans.find(plan => plan.code === planCode)?.name || planCode;
+            showToast(`Plan downgrade to ${planName} scheduled successfully! Change will take effect at the end of your billing cycle.`, 'success');
+            // Refresh subscription data to show updated status
+            await refreshData();
+          } else {
+            showToast(result.error || 'Failed to schedule downgrade', 'error');
+          }
+        }
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      console.error('Error processing plan change:', error);
+      showToast('An error occurred while processing your request', 'error');
+    } finally {
+      setIsProcessingPlanChange(false);
     }
   };
 
   if (isLoading || isLoadingPlans) {
     return (
       <div className="subscription-container">
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '200px',
-          fontSize: '16px',
-          color: 'hsl(var(--muted-foreground))'
-        }}>
+        <div className="loading-container">
           {t('loading')}...
         </div>
       </div>
@@ -144,28 +183,29 @@ export function Subscription() {
           </div>
         </div>
 
-        <div className="usage-overview">
-          <div className="usage-bar-container">
-            <div className="usage-header">
-              <span className="usage-label">{t('usedThisMonth')}</span>
-              <span className="usage-numbers">
-                {subscriptionData?.usage?.current || 0} / {subscriptionData?.plan?.monthlyLimit === -1
-                  ? t('unlimited')
-                  : subscriptionData?.plan?.monthlyLimit || 100}
-              </span>
-            </div>
-            {subscriptionData?.plan?.monthlyLimit !== -1 && (
-              <div className="usage-bar">
-                <div
-                  className="usage-progress"
-                  style={{
-                    width: `${Math.min(100, ((subscriptionData?.usage?.current || 0) / (subscriptionData?.plan?.monthlyLimit || 100)) * 100)}%`
-                  }}
-                ></div>
+        {/* Billing Information */}
+        {billingInfo && (
+          <div className="billing-info">
+            {billingInfo.remainingDays > 0 && (
+              <div className="billing-item">
+                <span className="billing-label">⏰ Billing Cycle:</span>
+                <span className="billing-value">{billingInfo.remainingDays} days remaining</span>
+              </div>
+            )}
+            {billingInfo.pendingChange && (
+              <div className="billing-item pending-change">
+                <span className="billing-label">📅 Scheduled Change:</span>
+                <span className="billing-value">
+                  {billingInfo.pendingChange.targetPlan} plan
+                  {billingInfo.pendingChange.effectiveDate &&
+                    ` on ${new Date(billingInfo.pendingChange.effectiveDate).toLocaleDateString()}`
+                  }
+                </span>
               </div>
             )}
           </div>
-        </div>
+        )}
+
       </div>
 
       {/* Available Plans */}
@@ -201,24 +241,35 @@ export function Subscription() {
                     <div className="current-plan-checkmark">✓</div>
                     <span>Current Plan</span>
                   </div>
+                ) : hasPendingChange(plan.code) ? (
+                  <div className="pending-change-indicator">
+                    <div className="pending-change-icon">⏳</div>
+                    <span>Scheduled</span>
+                  </div>
                 ) : (
                   <button
                     className={`upgrade-button ${
-                      // Only show upgrade for higher-tier plans
+                      // Upgrade path (to higher tier)
                       (currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
                       (currentPlanCode === 'PRO' && plan.code === 'ELITE')
-                        ? 'upgrade' : 'unavailable'
+                        ? 'upgrade'
+                      // Downgrade path (to lower tier)
+                      : (currentPlanCode === 'PRO' && plan.code === 'FREE') ||
+                        (currentPlanCode === 'ELITE' && (plan.code === 'FREE' || plan.code === 'PRO'))
+                        ? 'downgrade'
+                        : 'unavailable'
                     }`}
-                    onClick={() => handleUpgrade(plan.code)}
-                    disabled={
-                      // Disable if it's not an upgrade path
-                      !((currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
-                        (currentPlanCode === 'PRO' && plan.code === 'ELITE'))
-                    }
+                    onClick={() => handlePlanChange(plan.code)}
+                    disabled={isProcessingPlanChange}
                   >
-                    {(currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
-                     (currentPlanCode === 'PRO' && plan.code === 'ELITE')
+                    {isProcessingPlanChange
+                      ? 'Processing...'
+                      : (currentPlanCode === 'FREE' && (plan.code === 'PRO' || plan.code === 'ELITE')) ||
+                        (currentPlanCode === 'PRO' && plan.code === 'ELITE')
                       ? t('upgrade')
+                      : (currentPlanCode === 'PRO' && plan.code === 'FREE') ||
+                        (currentPlanCode === 'ELITE' && (plan.code === 'FREE' || plan.code === 'PRO'))
+                      ? plan.code === 'FREE' ? 'Cancel Subscription' : 'Downgrade'
                       : 'Not Available'}
                   </button>
                 )}

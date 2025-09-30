@@ -74,6 +74,73 @@ class ApiClient {
         }
     }
 
+    async downgradePlan(targetPlan) {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/subscription/downgrade`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ targetPlan })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to schedule downgrade');
+            }
+
+            return { success: true, ...data };
+
+        } catch (error) {
+            console.error('Downgrade plan error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async cancelSubscription() {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/subscription/cancel`,
+                {
+                    method: 'DELETE'
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to cancel subscription');
+            }
+
+            return { success: true, ...data };
+
+        } catch (error) {
+            console.error('Cancel subscription error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async getBillingInfo() {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/subscription/billing-info`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to get billing information');
+            }
+
+            return { success: true, ...data };
+
+        } catch (error) {
+            console.error('Get billing info error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async saveSettings(settings) {
         try {
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
