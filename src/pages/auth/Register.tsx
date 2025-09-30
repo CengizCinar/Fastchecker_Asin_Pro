@@ -6,9 +6,10 @@ import './Register.css'; // Use Register-specific styles
 
 interface RegisterProps {
   onSwitchToLogin?: () => void;
+  switchTab?: (tab: string) => void;
 }
 
-export function Register({ onSwitchToLogin }: RegisterProps) {
+export function Register({ onSwitchToLogin, switchTab }: RegisterProps) {
   const { register, isLoading, error, clearError } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { showToast } = useToast();
@@ -37,7 +38,7 @@ export function Register({ onSwitchToLogin }: RegisterProps) {
 
     setIsSubmitting(true);
     try {
-      const result = await register(email, password);
+      const result = await register(email, password, switchTab);
       
       if (result && result.success) {
         if (result.requiresVerification) {

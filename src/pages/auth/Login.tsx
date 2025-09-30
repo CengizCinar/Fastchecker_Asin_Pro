@@ -7,9 +7,10 @@ import './Login.css';
 
 interface LoginProps {
   onSwitchToRegister?: () => void;
+  switchTab?: (tab: string) => void;
 }
 
-export function Login({ onSwitchToRegister }: LoginProps) {
+export function Login({ onSwitchToRegister, switchTab }: LoginProps) {
   const { login, isLoading, error, clearError } = useAuth();
   const { currentLanguage, setLanguage, t } = useLanguage();
   const { showToast } = useToast();
@@ -40,18 +41,18 @@ export function Login({ onSwitchToRegister }: LoginProps) {
 
     setIsSubmitting(true);
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, switchTab);
       
       if (result && result.success) {
         showToast(t('loginSuccessful'), 'success');
       } else if (result && result.requiresVerification) {
         // Store email for verification and redirect
-        await chrome.storage.local.set({ pendingVerificationEmail: result.email });
+        await chrome.storage.local.set({ pendingVerificationEmail: result.email || email });
         showToast(t('pleaseCheckEmailForVerification'), 'success');
         // Redirect to verification page
-        window.location.href = `verification.html?email=${encodeURIComponent(result.email)}`;
+        window.location.href = `verification.html?email=${encodeURIComponent(result.email || email)}`;
       } else if (result && result.userNotFound) {
-        showToast(result.error, 'error');
+        showToast(result.error || 'User not found', 'error');
         // Optionally show register form
       } else if (result && result.error) {
         showToast(result.error, 'error');
@@ -110,7 +111,7 @@ export function Login({ onSwitchToRegister }: LoginProps) {
       showToast(t('resetCodeSent'), 'success');
 
     } catch (error) {
-      showToast(error.message || 'Failed to send reset code', 'error');
+      showToast((error as Error).message || 'Failed to send reset code', 'error');
     } finally {
       setIsResetting(false);
     }
@@ -158,14 +159,14 @@ export function Login({ onSwitchToRegister }: LoginProps) {
       setResetUserId('');
 
     } catch (error) {
-      showToast(error.message || 'Password reset failed', 'error');
+      showToast((error as Error).message || 'Password reset failed', 'error');
     } finally {
       setIsResetting(false);
     }
   };
 
   if (showRegister) {
-    return <Register onSwitchToLogin={() => setShowRegister(false)} />;
+    return <Register onSwitchToLogin={() => setShowRegister(false)} switchTab={switchTab} />;
   }
 
   return (
