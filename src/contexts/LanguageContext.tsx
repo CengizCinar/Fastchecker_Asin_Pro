@@ -118,6 +118,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'passwordMinLength': 'Password must be at least 8 characters long',
         'resetting': 'Resetting...',
         'resetPasswordSuccess': 'Password reset successfully! You can now login with your new password.',
+        'verifyResetCode': 'Verify Reset Code',
+        'resetCodeSent': 'We\'ll send you a 6-digit code to reset your password',
+        'sending': 'Sending...',
+        'sendResetCode': 'Send Reset Code',
+        'resetCode': 'Reset Code',
+        'enterResetCode': 'Enter 6-digit code',
+        'back': 'Back',
         
             // Check page
             'asinInput': 'ASIN Input',
@@ -332,6 +339,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'passwordMinLength': 'Şifre en az 8 karakter uzunluğunda olmalıdır',
         'resetting': 'Sıfırlanıyor...',
         'resetPasswordSuccess': 'Şifre başarıyla sıfırlandı! Artık yeni şifrenizle giriş yapabilirsiniz.',
+        'verifyResetCode': 'Sıfırlama Kodunu Doğrula',
+        'resetCodeSent': 'Şifrenizi sıfırlamak için size 6 haneli bir kod göndereceğiz',
+        'sending': 'Gönderiliyor...',
+        'sendResetCode': 'Sıfırlama Kodu Gönder',
+        'resetCode': 'Sıfırlama Kodu',
+        'enterResetCode': '6 haneli kodu girin',
+        'back': 'Geri',
         
             // Check page
             'asinInput': 'ASIN Girişi',
