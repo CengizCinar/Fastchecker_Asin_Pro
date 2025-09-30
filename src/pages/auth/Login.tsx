@@ -17,6 +17,10 @@ export function Login({ onSwitchToRegister }: LoginProps) {
   const [password, setPassword] = useState('');
   const [showRegister, setShowRegister] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleLanguageToggle = () => {
     setLanguage(currentLanguage === 'en' ? 'tr' : 'en');
@@ -63,6 +67,55 @@ export function Login({ onSwitchToRegister }: LoginProps) {
       onSwitchToRegister();
     } else {
       setShowRegister(true);
+    }
+  };
+
+  const handleForgotPassword = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPasswordReset(true);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetEmail || !newPassword) {
+      showToast(t('pleaseFillAllFields'), 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showToast(t('passwordMinLength'), 'error');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await fetch('https://professionalfastchecker-production.up.railway.app/reset-user-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: resetEmail,
+          newPassword: newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Password reset failed');
+      }
+
+      showToast(t('resetPasswordSuccess'), 'success');
+      setShowPasswordReset(false);
+      setResetEmail('');
+      setNewPassword('');
+
+    } catch (error) {
+      showToast(error.message || 'Password reset failed', 'error');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -122,6 +175,11 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                 required
                 disabled={isSubmitting}
               />
+              <div className="form-forgot-password">
+                <a href="javascript:void(0)" onClick={handleForgotPassword} className="auth-link">
+                  {t('forgotPassword')}
+                </a>
+              </div>
             </div>
             
             <button 
@@ -143,6 +201,76 @@ export function Login({ onSwitchToRegister }: LoginProps) {
           </p>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal">
+            <div className="auth-modal-header">
+              <h3>{t('resetPassword')}</h3>
+              <button
+                className="auth-modal-close"
+                onClick={() => setShowPasswordReset(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordReset} className="auth-form">
+              <div className="form-group">
+                <label htmlFor="resetEmail" className="form-label">{t('email')}</label>
+                <input
+                  type="email"
+                  id="resetEmail"
+                  className="form-input"
+                  placeholder={t('emailPlaceholder')}
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  disabled={isResetting}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="newPassword" className="form-label">{t('newPassword')}</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  className="form-input"
+                  placeholder={t('enterNewPasswordReset')}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  disabled={isResetting}
+                  minLength={8}
+                />
+                <small className="form-help-text">
+                  {t('passwordMinLength')}
+                </small>
+              </div>
+
+              <div className="auth-modal-actions">
+                <button
+                  type="button"
+                  className="auth-btn secondary"
+                  onClick={() => setShowPasswordReset(false)}
+                  disabled={isResetting}
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="auth-btn primary"
+                  disabled={isResetting}
+                >
+                  {isResetting ? t('resetting') : t('resetPassword')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -86,6 +86,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'welcomeSubtitle': 'Sign in to check your ASIN eligibility',
         'loginTitle': 'Login',
         'loginDesc': 'Enter your email below to login to your account',
+        'forgotPassword': 'Forgot password?',
         'emailPlaceholder': 'm@example.com',
         'passwordPlaceholder': '••••••••',
         'signIn': 'Sign In',
@@ -112,6 +113,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'backToLogin': 'Back to Login',
         'verificationCodeExpired': 'Your verification code has expired.',
         'pleaseResendCode': 'Please click "Resend Code" to get a new code.',
+        'resetPassword': 'Reset Password',
+        'enterNewPasswordReset': 'Enter your new password',
+        'passwordMinLength': 'Password must be at least 8 characters long',
+        'resetting': 'Resetting...',
+        'resetPasswordSuccess': 'Password reset successfully! You can now login with your new password.',
         
             // Check page
             'asinInput': 'ASIN Input',
@@ -294,6 +300,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'welcomeSubtitle': 'ASIN uygunluğunuzu kontrol etmek için giriş yapın',
         'loginTitle': 'Giriş',
         'loginDesc': 'Hesabınıza giriş yapmak için e-posta adresinizi girin',
+        'forgotPassword': 'Şifremi unuttum?',
         'emailPlaceholder': 'ornek@email.com',
         'passwordPlaceholder': '••••••••',
         'signIn': 'Giriş Yap',
@@ -320,6 +327,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         'backToLogin': 'Girişe Dön',
         'verificationCodeExpired': 'Doğrulama kodunuzun süresi doldu.',
         'pleaseResendCode': 'Yeni kod almak için "Kodu Tekrar Gönder"e tıklayın.',
+        'resetPassword': 'Şifre Sıfırla',
+        'enterNewPasswordReset': 'Yeni şifrenizi girin',
+        'passwordMinLength': 'Şifre en az 8 karakter uzunluğunda olmalıdır',
+        'resetting': 'Sıfırlanıyor...',
+        'resetPasswordSuccess': 'Şifre başarıyla sıfırlandı! Artık yeni şifrenizle giriş yapabilirsiniz.',
         
             // Check page
             'asinInput': 'ASIN Girişi',
