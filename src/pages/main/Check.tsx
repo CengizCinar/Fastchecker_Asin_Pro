@@ -47,20 +47,21 @@ export function Check() {
     loadSavedResults();
   }, []);
 
-  // Save results to storage whenever they change
+  // Save results and input to storage whenever they change
   useEffect(() => {
-    if (results.length > 0) {
+    if (results.length > 0 || asinInput.trim()) {
       chrome.storage.local.set({
         'check_results': results,
         'check_input_order': inputAsinOrder,
+        'check_input_text': asinInput,
         'check_timestamp': Date.now()
       });
     }
-  }, [results, inputAsinOrder]);
+  }, [results, inputAsinOrder, asinInput]);
 
   const loadSavedResults = async () => {
     try {
-      const data = await chrome.storage.local.get(['check_results', 'check_input_order', 'check_timestamp']);
+      const data = await chrome.storage.local.get(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
       if (data.check_results && data.check_results.length > 0) {
         // Only load if less than 24 hours old
         const timestamp = data.check_timestamp || 0;
@@ -70,9 +71,10 @@ export function Check() {
         if (age < maxAge) {
           setResults(data.check_results);
           setInputAsinOrder(data.check_input_order || []);
+          setAsinInput(data.check_input_text || '');
         } else {
           // Clear old results
-          chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
+          chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
         }
       }
     } catch (error) {
@@ -128,7 +130,7 @@ export function Check() {
     setIsAnimating(true);
 
     // Clear old results from storage when starting new check
-    chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
+    chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
     
     try {
       // Process each ASIN individually like the old project
@@ -239,7 +241,7 @@ export function Check() {
         setInputAsinOrder([]);
         setIsAnimating(false);
         // Clear from storage as well
-        chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
+        chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
         showToast(t('resultsCleared'), 'success');
       },
       isDestructive: true,
