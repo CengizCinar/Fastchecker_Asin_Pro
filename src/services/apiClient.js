@@ -267,17 +267,20 @@ class ApiClient {
 
     async exportUserData() {
         try {
+            // Use ASIN export endpoint for current month's data
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
-                `${this.baseURL}/api/user/export`
+                `${this.baseURL}/api/asin/export`
             );
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to export user data');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to export user data');
             }
 
-            return { success: true, ...data };
+            // Response is CSV text, not JSON
+            const csvData = await response.text();
+
+            return { success: true, csvData };
 
         } catch (error) {
             console.error('Export user data error:', error);
