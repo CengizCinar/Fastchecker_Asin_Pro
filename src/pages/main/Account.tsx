@@ -88,7 +88,8 @@ export function Account() {
     if (currentUser && !isDataLoaded) {
       loadAccountData();
     }
-  }, [currentUser, isDataLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]); // Only run when currentUser changes, not isDataLoaded
 
   const loadAccountData = async () => {
     try {

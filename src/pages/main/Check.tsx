@@ -47,15 +47,20 @@ export function Check() {
     loadSavedResults();
   }, []);
 
-  // Save results and input to storage whenever they change
+  // Save results and input to storage whenever they change (debounced)
   useEffect(() => {
     if (results.length > 0 || asinInput.trim()) {
-      chrome.storage.local.set({
-        'check_results': results,
-        'check_input_order': inputAsinOrder,
-        'check_input_text': asinInput,
-        'check_timestamp': Date.now()
-      });
+      // Debounce storage writes to avoid excessive updates
+      const timeoutId = setTimeout(() => {
+        chrome.storage.local.set({
+          'check_results': results,
+          'check_input_order': inputAsinOrder,
+          'check_input_text': asinInput,
+          'check_timestamp': Date.now()
+        });
+      }, 500); // Wait 500ms before saving
+
+      return () => clearTimeout(timeoutId);
     }
   }, [results, inputAsinOrder, asinInput]);
 
