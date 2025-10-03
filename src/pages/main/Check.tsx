@@ -41,9 +41,44 @@ export function Check() {
   const [hasValidSettings, setHasValidSettings] = useState(false);
   const [progress, setProgress] = useState({ processed: 0, total: 0, success: 0, warning: 0, error: 0 });
 
+  // Load saved results from storage on mount
   useEffect(() => {
     checkSettings();
+    loadSavedResults();
   }, []);
+
+  // Save results to storage whenever they change
+  useEffect(() => {
+    if (results.length > 0) {
+      chrome.storage.local.set({
+        'check_results': results,
+        'check_input_order': inputAsinOrder,
+        'check_timestamp': Date.now()
+      });
+    }
+  }, [results, inputAsinOrder]);
+
+  const loadSavedResults = async () => {
+    try {
+      const data = await chrome.storage.local.get(['check_results', 'check_input_order', 'check_timestamp']);
+      if (data.check_results && data.check_results.length > 0) {
+        // Only load if less than 24 hours old
+        const timestamp = data.check_timestamp || 0;
+        const age = Date.now() - timestamp;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (age < maxAge) {
+          setResults(data.check_results);
+          setInputAsinOrder(data.check_input_order || []);
+        } else {
+          // Clear old results
+          chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved results:', error);
+    }
+  };
 
   const checkSettings = async () => {
     try {
@@ -91,6 +126,9 @@ export function Check() {
     setIsLoading(true);
     setResults([]); // Clear previous results
     setIsAnimating(true);
+
+    // Clear old results from storage when starting new check
+    chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
     
     try {
       // Process each ASIN individually like the old project
@@ -200,6 +238,8 @@ export function Check() {
         setAsinInput('');
         setInputAsinOrder([]);
         setIsAnimating(false);
+        // Clear from storage as well
+        chrome.storage.local.remove(['check_results', 'check_input_order', 'check_timestamp']);
         showToast(t('resultsCleared'), 'success');
       },
       isDestructive: true,
