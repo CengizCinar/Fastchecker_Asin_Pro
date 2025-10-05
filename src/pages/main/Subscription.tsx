@@ -67,10 +67,17 @@ export function Subscription() {
     return featureList.length > 0 ? featureList.join(', ') : 'Basic features';
   };
 
-  const getFeatureDisplayList = (features: any) => {
+  const getFeatureDisplayList = (features: any, monthlyLimit: number) => {
     if (!features) return [];
 
     const displayFeatures = [];
+
+    // Add monthly limit as first feature
+    if (monthlyLimit === -1) {
+      displayFeatures.push(`✓ ${t('unlimited')} ${t('checks')}`);
+    } else {
+      displayFeatures.push(`✓ ${(monthlyLimit || 0).toLocaleString()} ${t('checks')} mo`);
+    }
 
     if (features.csv_export) displayFeatures.push('✓ CSV Export');
     if (features.monthly_data_export) displayFeatures.push('✓ Monthly Data Export');
@@ -175,7 +182,7 @@ export function Subscription() {
             {subscriptionData?.plan?.price ? (
               <>
                 <span className="price-amount">${subscriptionData.plan.price}</span>
-                <span className="price-period">/{t('perMonth')}</span>
+                <span className="price-period">/mo</span>
               </>
             ) : (
               <span className="price-free">{t('planFree')}</span>
@@ -213,23 +220,20 @@ export function Subscription() {
         <h3 className="plans-title">{t('availablePlans')}</h3>
         <div className="plans-grid">
           {availablePlans.map((plan) => (
-            <div key={plan.code} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
+            <div key={plan.code} className={`plan-card ${currentPlanCode === plan.code ? 'current-user-plan' : ''}`} data-code={plan.code}>
               {plan.featured && (
                 <div className="plan-badge">{t('mostPopular')}</div>
               )}
               <div className="plan-card-header">
-                <h4 className="plan-card-title">{plan.name}</h4>
+                <div>
+                  <h4 className="plan-card-title">{plan.name}</h4>
+                </div>
                 <div className="plan-price">
-                  {plan.price}<span className="price-period">{t('perMonth')}</span>
+                  {plan.price}{plan.price !== 'Free' && <span className="price-period">/mo</span>}
                 </div>
               </div>
               <div className="plan-features">
-                <div className="feature-item">
-                  {plan.monthlyLimit === -1
-                    ? `${t('unlimited')} ${t('checks')}`
-                    : `${(plan.monthlyLimit || 0).toLocaleString()} ${t('checks')} ${t('perMonth')}`}
-                </div>
-                {getFeatureDisplayList(plan.features).map((feature, index) => (
+                {getFeatureDisplayList(plan.features, plan.monthlyLimit).map((feature, index) => (
                   <div key={index} className="feature-item">
                     {feature}
                   </div>
