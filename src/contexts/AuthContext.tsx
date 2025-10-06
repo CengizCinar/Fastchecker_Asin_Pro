@@ -190,11 +190,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Stop loading after redirect check
         dispatch({ type: 'SET_LOADING', payload: false });
 
+        return { success: true, user: result.user };
       } else {
         dispatch({ type: 'SET_ERROR', payload: result.error });
+        return { success: false, error: result.error };
       }
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Email verification failed' });
+      const errorMessage = 'Email verification failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      return { success: false, error: errorMessage };
     }
   };
 

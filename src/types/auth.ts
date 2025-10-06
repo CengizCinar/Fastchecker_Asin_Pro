@@ -17,7 +17,7 @@ export interface AuthActions {
   login: (email: string, password: string, switchTab?: (tab: string) => void) => Promise<{ success: boolean; user?: User; error?: string; requiresVerification?: boolean; userNotFound?: boolean; email?: string }>;
   register: (email: string, password: string, switchTab?: (tab: string) => void) => Promise<{ success: boolean; user?: User; error?: string; requiresVerification?: boolean; message?: string; email?: string }>;
   logout: () => Promise<void>;
-  verifyEmail: (code: string, switchTab?: (tab: string) => void) => Promise<void>;
+  verifyEmail: (code: string, switchTab?: (tab: string) => void) => Promise<{ success: boolean; user?: User; error?: string }>;
   resendVerificationCode: (email: string) => Promise<void>;
   clearError: () => void;
 }

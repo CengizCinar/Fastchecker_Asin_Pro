@@ -28,7 +28,8 @@
       "Bash(railway logs:*)",
       "Bash(node:*)",
       "Bash(pkill:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
