@@ -237,7 +237,15 @@ export function Subscription() {
           <div className="billing-info-compact">
             <span className="billing-days">{t('monthlyReset')}</span>
             <span className="billing-renewal-date">
-              {new Date(subscriptionData.usage.resetDate).toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {(() => {
+                const resetDate = new Date(subscriptionData.usage.resetDate);
+                const now = new Date();
+                // If reset date is in the past, show next month's reset
+                while (resetDate < now) {
+                  resetDate.setMonth(resetDate.getMonth() + 1);
+                }
+                return resetDate.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+              })()}
             </span>
           </div>
         ) : currentPlanCode !== 'FREE' && billingInfo && billingInfo.remainingDays > 0 && subscriptionData?.subscription?.endDate ? (
