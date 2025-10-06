@@ -258,30 +258,40 @@ export function Check() {
   };
 
   const getCSVStatus = (result: CheckResult): string => {
-    if (result.status === 'error') {
-      return currentLanguage === 'tr' ? 'Hata' : 'Error';
-    }
+    let status = '';
 
-    if (result.detailedStatus) {
+    if (result.status === 'error') {
+      status = currentLanguage === 'tr' ? 'Hata' : 'Error';
+    } else if (result.detailedStatus) {
       switch (result.detailedStatus) {
         case 'Eligible':
-          return currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
+          status = currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
+          break;
         case 'APPROVAL REQUIRED':
-          return currentLanguage === 'tr' ? 'Onay Gerekli' : 'Approval Required';
+          status = currentLanguage === 'tr' ? 'Onay Gerekli' : 'Approval Required';
+          break;
         case 'NOT_FOUND_IN_MARKETPLACE':
-          return currentLanguage === 'tr' ? 'Pazaryerinde Bulunamadı' : 'Not Found in Marketplace';
+          status = currentLanguage === 'tr' ? 'Pazaryerinde Bulunamadı' : 'Not Found in Marketplace';
+          break;
         case 'Restricted':
-          return currentLanguage === 'tr' ? 'Kısıtlı' : 'Restricted';
+          status = currentLanguage === 'tr' ? 'Kısıtlı' : 'Restricted';
+          break;
         case 'Ineligible':
-          return currentLanguage === 'tr' ? 'Uygun Değil' : 'Ineligible';
+          status = currentLanguage === 'tr' ? 'Uygun Değil' : 'Ineligible';
+          break;
         default:
-          return currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
+          status = currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
       }
+    } else if (result.sellable === true) {
+      status = currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
+    } else if (result.sellable === false) {
+      status = currentLanguage === 'tr' ? 'Satılamaz' : 'Not Sellable';
+    } else {
+      status = currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
     }
 
-    if (result.sellable === true) return currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
-    if (result.sellable === false) return currentLanguage === 'tr' ? 'Satılamaz' : 'Not Sellable';
-    return currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
+    // Convert to uppercase with proper Turkish locale support
+    return currentLanguage === 'tr' ? status.toLocaleUpperCase('tr-TR') : status.toUpperCase();
   };
 
   const handleExportCSV = () => {
@@ -290,8 +300,11 @@ export function Check() {
       return;
     }
 
-    const headers = ['ASIN', 'Title', 'Brand', 'Status', 'Check Date'];
-    const currentDate = new Date().toLocaleDateString('en-US');
+    // CSV headers based on language
+    const headers = currentLanguage === 'tr'
+      ? ['ASIN', 'Başlık', 'Marka', 'Durum', 'Kontrol Tarihi']
+      : ['ASIN', 'Title', 'Brand', 'Status', 'Check Date'];
+    const currentDate = new Date().toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
 
     // Create a map of results by ASIN for quick lookup
     const resultsMap = new Map<string, CheckResult>();
