@@ -184,6 +184,22 @@
   background: #f3f4f6;
 }
 
+.plan-card.highlight-card {
+  border-color: #10b981;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  animation: highlight-pulse 1s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
 .plan-badge {
   position: absolute;
   top: -10px;
