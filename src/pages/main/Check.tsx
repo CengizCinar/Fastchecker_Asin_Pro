@@ -28,7 +28,7 @@ interface CheckResult {
 }
 
 export function Check() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const { showToast } = useToast();
   const { showModal } = useModal();
   const { refreshData } = useSubscription();

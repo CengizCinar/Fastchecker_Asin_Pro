@@ -132,7 +132,7 @@ export function Account() {
   const handleExportData = async () => {
     try {
       setIsExporting(true);
-      const result = await apiClient.exportUserData();
+      const result = await apiClient.exportUserData(currentLanguage);
       
       if (result.success) {
         // Create and download CSV file

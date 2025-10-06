@@ -288,11 +288,11 @@ class ApiClient {
         }
     }
 
-    async exportUserData() {
+    async exportUserData(language = 'en') {
         try {
             // Use ASIN export endpoint for current month's data
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
-                `${this.baseURL}/api/asin/export`
+                `${this.baseURL}/api/asin/export?language=${language}`
             );
 
             if (!response.ok) {
