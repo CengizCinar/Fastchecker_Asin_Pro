@@ -184,8 +184,10 @@ export function Check() {
           }, 100);
           processedCount++;
 
-          // Update counters
-          if (asinResult.sellable) {
+          // Update counters (skip NOT_FOUND_IN_MARKETPLACE from stats)
+          if (asinResult.detailedStatus === 'NOT_FOUND_IN_MARKETPLACE') {
+            // Don't count "not found" in statistics
+          } else if (asinResult.sellable) {
             successCount++;
           } else if (asinResult.detailedStatus?.includes('APPROVAL')) {
             warningCount++;
@@ -255,6 +257,33 @@ export function Check() {
     });
   };
 
+  const getCSVStatus = (result: CheckResult): string => {
+    if (result.status === 'error') {
+      return currentLanguage === 'tr' ? 'Hata' : 'Error';
+    }
+
+    if (result.detailedStatus) {
+      switch (result.detailedStatus) {
+        case 'Eligible':
+          return currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
+        case 'APPROVAL REQUIRED':
+          return currentLanguage === 'tr' ? 'Onay Gerekli' : 'Approval Required';
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          return currentLanguage === 'tr' ? 'Pazaryerinde Bulunamadı' : 'Not Found in Marketplace';
+        case 'Restricted':
+          return currentLanguage === 'tr' ? 'Kısıtlı' : 'Restricted';
+        case 'Ineligible':
+          return currentLanguage === 'tr' ? 'Uygun Değil' : 'Ineligible';
+        default:
+          return currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
+      }
+    }
+
+    if (result.sellable === true) return currentLanguage === 'tr' ? 'Satılabilir' : 'Sellable';
+    if (result.sellable === false) return currentLanguage === 'tr' ? 'Satılamaz' : 'Not Sellable';
+    return currentLanguage === 'tr' ? 'Bilinmiyor' : 'Unknown';
+  };
+
   const handleExportCSV = () => {
     if (results.length === 0) {
       showToast(t('noResultsToExport'), 'error');
@@ -263,13 +292,13 @@ export function Check() {
 
     const headers = ['ASIN', 'Title', 'Brand', 'Status', 'Check Date'];
     const currentDate = new Date().toLocaleDateString('en-US');
-    
+
     // Create a map of results by ASIN for quick lookup
     const resultsMap = new Map<string, CheckResult>();
     results.forEach(result => {
       resultsMap.set(result.asin, result);
     });
-    
+
     // Export in the order user inputted ASINs
     const csvContent = [
       headers.join(','),
@@ -285,14 +314,14 @@ export function Check() {
             currentDate
           ].join(',');
         }
-        
+
         const productTitle = result.details?.title || result.details?.itemName || result.title || 'N/A';
         const productBrand = result.details?.brand || result.details?.brandName || result.brand || 'N/A';
         return [
           result.asin,
           `"${productTitle.replace(/"/g, '""')}"`,
           `"${productBrand.replace(/"/g, '""')}"`,
-          getStatusText(result),
+          `"${getCSVStatus(result)}"`,
           currentDate
         ].join(',');
       })
@@ -324,6 +353,8 @@ export function Check() {
           return 'success';
         case 'APPROVAL REQUIRED':
           return 'warning';
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          return 'not-found'; // Gri
         case 'Restricted':
         case 'Ineligible':
           return 'error'; // Kırmızı
@@ -356,6 +387,8 @@ export function Check() {
           return 'SELLABLE';
         case 'APPROVAL REQUIRED':
           return 'APPROVAL\nREQUIRED';
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          return t('notFoundInMarketplace').toUpperCase();
         case 'Restricted':
           return 'RESTRICTED';
         case 'Ineligible':
