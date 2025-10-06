@@ -187,6 +187,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check if SP-API settings are configured after successful email verification
         await checkApiSettingsAndRedirect(switchTab);
 
+        // Stop loading after redirect check
+        dispatch({ type: 'SET_LOADING', payload: false });
+
       } else {
         dispatch({ type: 'SET_ERROR', payload: result.error });
       }
