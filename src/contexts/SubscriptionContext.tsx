@@ -98,6 +98,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   const refreshBillingInfo = async () => {
     if (!currentUser) {
@@ -123,9 +124,20 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       return;
     }
 
+    // Prevent too frequent refreshes (throttle to max once per 5 seconds)
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime;
+    const MIN_FETCH_INTERVAL = 5000; // 5 seconds
+
+    if (timeSinceLastFetch < MIN_FETCH_INTERVAL) {
+      console.log('⏳ Skipping refresh - too soon (last fetch was', timeSinceLastFetch, 'ms ago)');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
+      setLastFetchTime(now);
 
       console.log('📊 Loading unified subscription data...');
 
@@ -185,13 +197,15 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   };
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser?.id) {
       refreshData();
     } else {
       setSubscriptionData(null);
       setIsLoading(false);
     }
-  }, [currentUser]);
+    // Only trigger when user ID changes, not the entire user object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
 
   // Listen for usage updates from other parts of the app
   useEffect(() => {

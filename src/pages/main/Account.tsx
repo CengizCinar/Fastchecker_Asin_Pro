@@ -88,7 +88,8 @@ export function Account() {
     if (currentUser && !isDataLoaded) {
       loadAccountData();
     }
-  }, [currentUser, isDataLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]); // Only run when currentUser changes, not isDataLoaded
 
   const loadAccountData = async () => {
     try {
@@ -131,7 +132,7 @@ export function Account() {
   const handleExportData = async () => {
     try {
       setIsExporting(true);
-      const result = await apiClient.exportUserData();
+      const result = await apiClient.exportUserData(currentLanguage);
       
       if (result.success) {
         // Create and download CSV file
@@ -1109,29 +1110,33 @@ export function Account() {
                   borderRadius: '10px',
                   fontSize: '15px',
                   fontWeight: '600',
-                  cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  cursor: subscriptionData?.plan?.code === 'FREE' ? 'not-allowed' : 'pointer',
+                  background: subscriptionData?.plan?.code === 'FREE'
+                    ? 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   color: 'white',
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                  boxShadow: subscriptionData?.plan?.code === 'FREE'
+                    ? '0 2px 8px rgba(156, 163, 175, 0.3)'
+                    : '0 2px 8px rgba(16, 185, 129, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
                   transition: 'all 0.3s ease',
-                  opacity: isExporting ? 0.7 : 1,
+                  opacity: isExporting ? 0.7 : (subscriptionData?.plan?.code === 'FREE' ? 0.6 : 1),
                   width: '100%'
                 }}
-                onClick={handleExportData}
-                disabled={isExporting}
+                onClick={subscriptionData?.plan?.code !== 'FREE' ? handleExportData : undefined}
+                disabled={isExporting || subscriptionData?.plan?.code === 'FREE'}
                 onMouseEnter={(e) => {
-                  if (!isExporting) {
+                  if (!isExporting && subscriptionData?.plan?.code !== 'FREE') {
                     e.currentTarget.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isExporting) {
+                  if (!isExporting && subscriptionData?.plan?.code !== 'FREE') {
                     e.currentTarget.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
@@ -1156,6 +1161,17 @@ export function Account() {
                   </>
                 )}
               </button>
+              {subscriptionData?.plan?.code === 'FREE' && (
+                <p style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  marginTop: '12px',
+                  textAlign: 'center',
+                  lineHeight: '1.5'
+                }}>
+                  {t('upgradeForMonthlyReport')}
+                </p>
+              )}
             </div>
           </div>
 

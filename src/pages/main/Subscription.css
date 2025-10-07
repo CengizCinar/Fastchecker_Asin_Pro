@@ -1,400 +1,460 @@
-/* Subscription Page - Genel frontend tasarımına uygun */
-
+/* Subscription Container */
 .subscription-container {
-  padding: 6px 12px 12px;
-  max-width: 520px;
-  margin: 0 auto;
+  padding: 6px 16px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
 }
 
-/* Current Plan Section */
+/* Loading */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* Current Plan Card */
 .current-plan-card {
-  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 21px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
 }
 
 .plan-status-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.plan-status-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: hsl(var(--primary));
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: hsl(var(--primary));
-  border-radius: 50%;
+.plan-status-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .plan-code-badge {
-  background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
-  padding: 4px 8px;
+  background: #10b981;
+  color: white;
+  padding: 6px 14px;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.plan-overview {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.plan-info {
-  flex: 1;
-}
-
-.plan-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #22c55e; /* Plan adları yeşil */
-  margin: 0 0 4px 0;
-}
-
-.plan-features {
   font-size: 13px;
-  color: hsl(var(--muted-foreground));
-  margin: 0;
-  line-height: 1.4;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-features-summary {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.billing-info-compact {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  gap: 2px;
+}
+
+.billing-days {
+  font-size: 13px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.billing-renewal-date {
+  font-size: 11px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+.pending-change-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.pending-icon {
+  font-size: 14px;
+}
+
+.pending-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d97706;
 }
 
 .plan-price {
-  text-align: right;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
 .price-amount {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
-  color: hsl(var(--foreground));
+  color: #111827;
 }
 
 .price-period {
   font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin-left: 2px;
+  color: #6b7280;
 }
 
 .price-free {
-  font-size: 16px;
-  font-weight: 600;
-  color: hsl(var(--primary));
-}
-
-/* Billing Information */
-.billing-info {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.billing-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-}
-
-.billing-label {
-  color: hsl(var(--foreground));
-  font-weight: 500;
-}
-
-.billing-value {
-  color: hsl(var(--primary));
-  font-weight: 600;
-}
-
-.billing-item.pending-change {
-  padding: 8px 12px;
-  background: hsl(var(--primary) / 0.1);
-  border-radius: 6px;
-  border: 1px solid hsl(var(--primary) / 0.2);
-}
-
-.billing-item.pending-change .billing-value {
-  color: hsl(var(--primary));
+  font-size: 24px;
   font-weight: 700;
+  color: #111827;
 }
 
-/* Usage Overview */
-.usage-overview {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.usage-bar-container {
-  width: 100%;
-}
-
-.usage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.usage-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: hsl(var(--foreground));
-}
-
-.usage-numbers {
-  font-size: 13px;
-  font-weight: 600;
-  color: hsl(var(--primary));
-}
-
-.usage-bar {
-  width: 100%;
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.usage-progress {
-  height: 100%;
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
 
 /* Plans Section */
 .plans-section {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .plans-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: hsl(var(--foreground));
+  color: #111827;
   margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plans-title::before {
+  content: '📈';
+  font-size: 16px;
 }
 
 .plans-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-/* Plan Card - Kompakt tasarım */
+/* Plan Card */
 .plan-card {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
   position: relative;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 22px;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
 }
 
 .plan-card:hover {
-  border-color: hsl(var(--primary));
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.plan-card.current-user-plan {
+  border-color: #10b981;
+  background: #f0fdf4;
 }
 
 .plan-card.featured {
-  border-color: hsl(var(--primary));
-  background: hsl(var(--primary) / 0.02);
+  border-color: #e5e7eb;
+  background: #f3f4f6;
+}
+
+.plan-card.highlight-card {
+  border-color: #10b981;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  animation: highlight-pulse 1s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
 
 .plan-badge {
   position: absolute;
-  top: -6px;
-  right: 12px;
-  background: hsl(var(--primary));
+  top: -10px;
+  right: 16px;
+  background: #10b981;
   color: white;
-  padding: 3px 8px;
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .plan-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.plan-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #22c55e; /* Plan kartı adları da yeşil */
-  margin: 0;
-}
-
-.plan-card .plan-price {
-  text-align: right;
-}
-
-.plan-card .plan-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: hsl(var(--foreground));
-}
-
-.plan-card .price-period {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-}
-
-/* Plan Features - Kompakt liste */
-.plan-features {
   margin-bottom: 16px;
 }
 
-.feature-item {
-  font-size: 12px;
-  color: hsl(var(--foreground));
-  line-height: 1.4;
-  margin-bottom: 4px;
-  padding-left: 0;
+.plan-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.feature-item:last-child {
-  margin-bottom: 0;
+.plan-card-title::before {
+  font-size: 18px;
 }
+
+
+.plan-card[data-code="FREE"] .plan-card-title::before {
+  content: '⚡';
+}
+
+.plan-card[data-code="PRO"] .plan-card-title::before {
+  content: '👑';
+}
+
+.plan-card[data-code="ELITE"] .plan-card-title::before {
+  content: '🛡️';
+}
+
+.plan-card .plan-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.plan-card .price-period {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+.plan-features {
+  margin: 16px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-item {
+  padding: 8px 0;
+  font-size: 13px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature-item:first-child {
+  font-weight: 600;
+  color: #10b981;
+}
+
 
 /* Plan Card Footer */
 .plan-card-footer {
-  display: flex;
-  justify-content: center;
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 .current-plan-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: hsl(var(--primary));
-  font-size: 12px;
-  font-weight: 500;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #ecfdf5;
+  color: #10b981;
+  border: 2px solid #d1fae5;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .current-plan-checkmark {
-  width: 16px;
-  height: 16px;
-  background: hsl(var(--primary));
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  font-size: 18px;
   font-weight: 700;
 }
 
 .pending-change-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fffbeb;
   color: #f59e0b;
-  font-size: 12px;
-  font-weight: 500;
+  border: 2px solid #fef3c7;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .pending-change-icon {
-  width: 16px;
-  height: 16px;
-  background: #f59e0b;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 18px;
 }
 
 .upgrade-button {
-  padding: 8px 16px;
+  width: 100%;
+  padding: 12px 20px;
   border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 80px;
 }
 
 .upgrade-button.upgrade {
-  background: #22c55e;
+  background: #10b981;
   color: white;
 }
 
-.upgrade-button.upgrade:hover {
-  background: #16a34a;
+.upgrade-button.upgrade:hover:not(:disabled) {
+  background: #059669;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .upgrade-button.downgrade {
-  background: #ef4444;
-  color: white;
+  background: white;
+  color: #ef4444;
+  border: 2px solid #fee2e2;
 }
 
-.upgrade-button.downgrade:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-}
-
-.upgrade-button.unavailable {
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-  cursor: not-allowed;
+.upgrade-button.downgrade:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #ef4444;
 }
 
 .upgrade-button:disabled {
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Dark mode adjustments */
-[data-theme="dark"] .plan-overview,
-[data-theme="dark"] .usage-overview,
-[data-theme="dark"] .plan-card,
-[data-theme="dark"] .billing-info {
-  background: hsl(var(--card));
-  border-color: hsl(var(--border));
+.upgrade-button.unavailable {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
-[data-theme="dark"] .plan-card.featured {
-  background: hsl(var(--card));
-  border-color: hsl(var(--primary));
+.upgrade-button.cancel-pending {
+  background: #f59e0b;
+  color: white;
 }
 
-[data-theme="dark"] .usage-bar {
-  background: hsl(var(--border));
+.upgrade-button.cancel-pending:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-/* Loading state */
-.subscription-container .loading-container {
+/* Current Plan Actions */
+.current-plan-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
   display: flex;
-  justify-content: center;
+  gap: 16px;
   align-items: center;
-  height: 200px;
-  font-size: 14px;
-  color: hsl(var(--muted-foreground));
+}
+
+.action-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: underline;
+}
+
+.action-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.downgrade-link {
+  color: #f59e0b;
+}
+
+.downgrade-link:hover:not(:disabled) {
+  color: #d97706;
+}
+
+.cancel-link {
+  color: #ef4444;
+}
+
+.cancel-link:hover:not(:disabled) {
+  color: #dc2626;
+}
+
+.cancel-pending-link {
+  color: #f59e0b;
+}
+
+.cancel-pending-link:hover:not(:disabled) {
+  color: #d97706;
+}
+
+.upgrade-link {
+  color: #10b981;
+}
+
+.upgrade-link:hover:not(:disabled) {
+  color: #059669;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .subscription-container {
+    padding: 16px;
+  }
+
+  .plan-overview {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .plan-title {
+    font-size: 22px;
+  }
+
+  .price-amount {
+    font-size: 28px;
+  }
 }

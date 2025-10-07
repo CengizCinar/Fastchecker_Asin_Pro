@@ -116,7 +116,14 @@ export function Verification({ switchTab }: VerificationProps) {
     const code = verificationCode.join('');
     if (code.length !== 6) return;
 
-    await verifyEmail(code, switchTab);
+    const result = await verifyEmail(code, switchTab);
+
+    // If verification was successful, clean up and reload
+    if (result?.success) {
+      await chrome.storage.local.remove(['pendingVerificationUserId', 'pendingVerificationEmail']);
+      window.location.reload();
+    }
+    // If failed, error will be shown by AuthContext error state
   };
 
   const handleResend = async () => {

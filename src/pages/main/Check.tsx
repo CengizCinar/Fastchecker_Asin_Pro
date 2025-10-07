@@ -28,7 +28,7 @@ interface CheckResult {
 }
 
 export function Check() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const { showToast } = useToast();
   const { showModal } = useModal();
   const { refreshData } = useSubscription();
@@ -41,9 +41,51 @@ export function Check() {
   const [hasValidSettings, setHasValidSettings] = useState(false);
   const [progress, setProgress] = useState({ processed: 0, total: 0, success: 0, warning: 0, error: 0 });
 
+  // Load saved results from storage on mount
   useEffect(() => {
     checkSettings();
+    loadSavedResults();
   }, []);
+
+  // Save results and input to storage whenever they change (debounced)
+  useEffect(() => {
+    if (results.length > 0 || asinInput.trim()) {
+      // Debounce storage writes to avoid excessive updates
+      const timeoutId = setTimeout(() => {
+        chrome.storage.local.set({
+          'check_results': results,
+          'check_input_order': inputAsinOrder,
+          'check_input_text': asinInput,
+          'check_timestamp': Date.now()
+        });
+      }, 500); // Wait 500ms before saving
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [results, inputAsinOrder, asinInput]);
+
+  const loadSavedResults = async () => {
+    try {
+      const data = await chrome.storage.local.get(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
+      if (data.check_results && data.check_results.length > 0) {
+        // Only load if less than 24 hours old
+        const timestamp = data.check_timestamp || 0;
+        const age = Date.now() - timestamp;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (age < maxAge) {
+          setResults(data.check_results);
+          setInputAsinOrder(data.check_input_order || []);
+          setAsinInput(data.check_input_text || '');
+        } else {
+          // Clear old results
+          chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved results:', error);
+    }
+  };
 
   const checkSettings = async () => {
     try {
@@ -85,16 +127,32 @@ export function Check() {
       return;
     }
 
-    // Store the input order for CSV export
-    setInputAsinOrder(asins);
+    // ✅ DUPLICATE FILTER: Remove duplicates but keep original order
+    const originalOrder = asins; // Store original order for CSV export
+    const uniqueAsins = [...new Set(asins)]; // Remove duplicates
+
+    const duplicateCount = asins.length - uniqueAsins.length;
+    if (duplicateCount > 0) {
+      showToast(
+        t('duplicateAsinsRemoved')?.replace('{count}', duplicateCount.toString()) ||
+        `${duplicateCount} duplicate ASIN(s) removed`,
+        'info'
+      );
+    }
+
+    // Store the ORIGINAL input order for CSV export (with duplicates)
+    setInputAsinOrder(originalOrder);
 
     setIsLoading(true);
     setResults([]); // Clear previous results
     setIsAnimating(true);
-    
+
+    // Clear old results from storage when starting new check
+    chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
+
     try {
-      // Process each ASIN individually like the old project
-      await processAsinsRealtime(asins);
+      // Process UNIQUE ASINs (no duplicates checked)
+      await processAsinsRealtime(uniqueAsins, originalOrder);
     } catch (error) {
       console.error('Error checking ASINs:', error);
       setIsAnimating(false);
@@ -103,8 +161,11 @@ export function Check() {
     }
   };
 
-  const processAsinsRealtime = async (asins: string[]) => {
-    console.log(`🚀 Processing ${asins.length} ASINs in real-time`);
+  const processAsinsRealtime = async (asins: string[], originalOrder?: string[]) => {
+    console.log(`🚀 Processing ${asins.length} UNIQUE ASINs in batch mode (animated display)`);
+
+    // ✅ BATCH PROCESSING: Process 5 ASINs at once for better performance
+    const BATCH_SIZE = 5;
 
     // Initialize progress
     setProgress({ processed: 0, total: asins.length, success: 0, warning: 0, error: 0 });
@@ -114,33 +175,34 @@ export function Check() {
     let warningCount = 0;
     let errorCount = 0;
 
-    // Process each ASIN individually and show results immediately
-    for (let i = 0; i < asins.length; i++) {
-      const asin = asins[i];
-      console.log(`🔍 Processing ASIN ${i + 1}/${asins.length}: ${asin}`);
+    // ✅ QUEUE SYSTEM: Store results in queue, display with constant interval
+    const resultQueue: CheckResult[] = [];
+    let fetchingComplete = false;
 
-      try {
-        // Check single ASIN
-        const result = await apiClient.checkASINs([asin]);
+    // ✅ DISPLAY LOOP: Show results from queue with constant 600ms interval
+    const displayLoop = async () => {
+      while (!fetchingComplete || resultQueue.length > 0) {
+        if (resultQueue.length > 0) {
+          const asinResult = resultQueue.shift()!;
+          console.log(`✅ Displaying result for ${asinResult.asin}`);
 
-        if (result.success && result.results && result.results.length > 0) {
-          const asinResult = result.results[0];
-          console.log(`✅ Got result for ${asin}:`, asinResult);
-
-          // Add result to UI immediately (at the top like old project)
+          // Add result to UI
           setResults(prev => [asinResult, ...prev]);
 
-          // Auto scroll to top to show new result
+          // Auto scroll to top
           setTimeout(() => {
             const resultsContainer = document.getElementById('results');
             if (resultsContainer) {
               resultsContainer.scrollTop = 0;
             }
-          }, 100);
+          }, 50);
+
           processedCount++;
 
           // Update counters
-          if (asinResult.sellable) {
+          if (asinResult.detailedStatus === 'NOT_FOUND_IN_MARKETPLACE') {
+            // Don't count "not found" in statistics
+          } else if (asinResult.sellable) {
             successCount++;
           } else if (asinResult.detailedStatus?.includes('APPROVAL')) {
             warningCount++;
@@ -149,46 +211,81 @@ export function Check() {
           }
 
           // Update progress
-          setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+          setProgress({
+            processed: processedCount,
+            total: asins.length,
+            success: successCount,
+            warning: warningCount,
+            error: errorCount
+          });
 
-          // Update usage data if provided (like old project)
+          // ✅ CONSTANT INTERVAL: Always wait 600ms between cards
+          await new Promise(resolve => setTimeout(resolve, 600));
+        } else {
+          // Queue empty, wait a bit and check again
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      // All done
+      setIsAnimating(false);
+      setIsLoading(false);
+      showToast(
+        t('checkedAsinsSuccessfully')?.replace('{count}', processedCount.toString()) ||
+        `Successfully checked ${processedCount} ASIN(s)`,
+        'success'
+      );
+
+      // Update usage data
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error('Error refreshing subscription data:', error);
+      }
+    };
+
+    // Start display loop (non-blocking)
+    displayLoop();
+
+    // ✅ FETCH LOOP: Get results from backend and add to queue
+    for (let i = 0; i < asins.length; i += BATCH_SIZE) {
+      const batch = asins.slice(i, i + BATCH_SIZE);
+      console.log(`📦 Fetching batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(asins.length / BATCH_SIZE)}: ${batch.join(', ')}`);
+
+      try {
+        // Send BATCH to backend
+        const result = await apiClient.checkASINs(batch);
+
+        if (result.success && result.results && result.results.length > 0) {
+          // ✅ Add results to queue (display loop will show them)
+          resultQueue.push(...result.results);
+          console.log(`✅ Added ${result.results.length} results to queue (queue size: ${resultQueue.length})`);
+
+          // Update usage data if provided
           if (result.usage) {
-            window.dispatchEvent(new CustomEvent('usageUpdated', { 
-              detail: result.usage 
+            window.dispatchEvent(new CustomEvent('usageUpdated', {
+              detail: result.usage
             }));
           }
-
         } else {
-          console.warn(`⚠️ No result received for ASIN: ${asin}`);
-          errorCount++;
-          processedCount++;
-          setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+          console.warn(`⚠️ No results received for batch:`, batch);
+          errorCount += batch.length;
         }
 
       } catch (error) {
-        console.error(`❌ Error processing ${asin}:`, error);
-        errorCount++;
-        processedCount++;
-        setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+        console.error(`❌ Error processing batch:`, batch, error);
+        errorCount += batch.length;
       }
 
-      // Small delay to avoid overwhelming the API (like old project)
-      if (i < asins.length - 1) {
+      // Small delay between batch requests (rate limiting)
+      if (i + BATCH_SIZE < asins.length) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 
-    // Complete processing
-    setIsAnimating(false);
-    setIsLoading(false);
-    showToast(t('checkedAsinsSuccessfully').replace('{count}', processedCount.toString()), 'success');
-    
-    // Update usage data - limit will be handled by SubscriptionContext
-    try {
-      await refreshData();
-    } catch (error) {
-      console.error('Error refreshing subscription data:', error);
-    }
+    // Mark fetching as complete
+    fetchingComplete = true;
+    console.log('✅ All batches fetched, waiting for display loop to finish...');
   };
 
   const handleClearResults = () => {
@@ -200,6 +297,8 @@ export function Check() {
         setAsinInput('');
         setInputAsinOrder([]);
         setIsAnimating(false);
+        // Clear from storage as well
+        chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
         showToast(t('resultsCleared'), 'success');
       },
       isDestructive: true,
@@ -208,21 +307,60 @@ export function Check() {
     });
   };
 
+  const getCSVStatus = (result: CheckResult): string => {
+    let status = '';
+
+    if (result.status === 'error') {
+      status = currentLanguage === 'tr' ? 'HATA' : 'ERROR';
+    } else if (result.detailedStatus) {
+      switch (result.detailedStatus) {
+        case 'Eligible':
+          status = currentLanguage === 'tr' ? 'SATILABILIR' : 'SELLABLE';
+          break;
+        case 'APPROVAL REQUIRED':
+          status = currentLanguage === 'tr' ? 'ONAY GEREKLI' : 'APPROVAL REQUIRED';
+          break;
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          status = currentLanguage === 'tr' ? 'PAZARYERINDE BULUNAMADI' : 'NOT FOUND IN MARKETPLACE';
+          break;
+        case 'Restricted':
+          status = currentLanguage === 'tr' ? 'KISITLI' : 'RESTRICTED';
+          break;
+        case 'Ineligible':
+          status = currentLanguage === 'tr' ? 'UYGUN DEGIL' : 'NOT ELIGIBLE';
+          break;
+        default:
+          status = currentLanguage === 'tr' ? 'BILINMIYOR' : 'UNKNOWN';
+      }
+    } else if (result.sellable === true) {
+      status = currentLanguage === 'tr' ? 'SATILABILIR' : 'SELLABLE';
+    } else if (result.sellable === false) {
+      status = currentLanguage === 'tr' ? 'SATILAMAZ' : 'NOT SELLABLE';
+    } else {
+      status = currentLanguage === 'tr' ? 'BILINMIYOR' : 'UNKNOWN';
+    }
+
+    return status;
+  };
+
   const handleExportCSV = () => {
     if (results.length === 0) {
       showToast(t('noResultsToExport'), 'error');
       return;
     }
 
-    const headers = ['ASIN', 'Title', 'Brand', 'Status', 'Check Date'];
-    const currentDate = new Date().toLocaleDateString('en-US');
-    
+    // CSV headers based on language (ASCII only for Turkish)
+    const headers = currentLanguage === 'tr'
+      ? ['ASIN', 'BASLIK', 'MARKA', 'DURUM', 'KONTROL TARIHI']
+      : ['ASIN', 'TITLE', 'BRAND', 'STATUS', 'CHECK DATE'];
+    const currentDate = new Date().toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
+
     // Create a map of results by ASIN for quick lookup
     const resultsMap = new Map<string, CheckResult>();
     results.forEach(result => {
       resultsMap.set(result.asin, result);
     });
-    
+
     // Export in the order user inputted ASINs
     const csvContent = [
       headers.join(','),
@@ -238,14 +376,14 @@ export function Check() {
             currentDate
           ].join(',');
         }
-        
+
         const productTitle = result.details?.title || result.details?.itemName || result.title || 'N/A';
         const productBrand = result.details?.brand || result.details?.brandName || result.brand || 'N/A';
         return [
           result.asin,
           `"${productTitle.replace(/"/g, '""')}"`,
           `"${productBrand.replace(/"/g, '""')}"`,
-          getStatusText(result),
+          `"${getCSVStatus(result)}"`,
           currentDate
         ].join(',');
       })
@@ -277,6 +415,8 @@ export function Check() {
           return 'success';
         case 'APPROVAL REQUIRED':
           return 'warning';
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          return 'not-found'; // Gri
         case 'Restricted':
         case 'Ineligible':
           return 'error'; // Kırmızı
@@ -309,6 +449,8 @@ export function Check() {
           return 'SELLABLE';
         case 'APPROVAL REQUIRED':
           return 'APPROVAL\nREQUIRED';
+        case 'NOT_FOUND_IN_MARKETPLACE':
+          return t('notFoundInMarketplace').toUpperCase();
         case 'Restricted':
           return 'RESTRICTED';
         case 'Ineligible':

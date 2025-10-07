@@ -20,7 +20,21 @@ export function Header({ showNavigation = true }: HeaderProps) {
   // No more local subscription loading - using SubscriptionContext
 
   const handleUpgrade = () => {
-    chrome.tabs.create({ url: 'https://fastchecker.com/upgrade' });
+    // Navigate to subscription page and scroll to Pro card
+    switchTab('subscription');
+
+    // Scroll to Pro card after a short delay to ensure page is rendered
+    setTimeout(() => {
+      const proCard = document.querySelector('.plan-card[data-code="PRO"]');
+      if (proCard) {
+        proCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add a highlight effect
+        proCard.classList.add('highlight-card');
+        setTimeout(() => {
+          proCard.classList.remove('highlight-card');
+        }, 2000);
+      }
+    }, 300);
   };
 
   const handleLanguageToggle = () => {

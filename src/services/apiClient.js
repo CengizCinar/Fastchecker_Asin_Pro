@@ -98,6 +98,29 @@ class ApiClient {
         }
     }
 
+    async cancelPendingChange() {
+        try {
+            const response = await (window.authService || self.authService).makeAuthenticatedRequest(
+                `${this.baseURL}/api/subscription/cancel-pending-change`,
+                {
+                    method: 'DELETE'
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to cancel pending change');
+            }
+
+            return { success: true, ...data };
+
+        } catch (error) {
+            console.error('Cancel pending change error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async cancelSubscription() {
         try {
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
@@ -265,19 +288,22 @@ class ApiClient {
         }
     }
 
-    async exportUserData() {
+    async exportUserData(language = 'en') {
         try {
+            // Use ASIN export endpoint for current month's data
             const response = await (window.authService || self.authService).makeAuthenticatedRequest(
-                `${this.baseURL}/api/user/export`
+                `${this.baseURL}/api/asin/export?language=${language}`
             );
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to export user data');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to export user data');
             }
 
-            return { success: true, ...data };
+            // Response is CSV text, not JSON
+            const csvData = await response.text();
+
+            return { success: true, csvData };
 
         } catch (error) {
             console.error('Export user data error:', error);
