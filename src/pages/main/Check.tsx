@@ -127,8 +127,21 @@ export function Check() {
       return;
     }
 
-    // Store the input order for CSV export
-    setInputAsinOrder(asins);
+    // ✅ DUPLICATE FILTER: Remove duplicates but keep original order
+    const originalOrder = asins; // Store original order for CSV export
+    const uniqueAsins = [...new Set(asins)]; // Remove duplicates
+
+    const duplicateCount = asins.length - uniqueAsins.length;
+    if (duplicateCount > 0) {
+      showToast(
+        t('duplicateAsinsRemoved')?.replace('{count}', duplicateCount.toString()) ||
+        `${duplicateCount} duplicate ASIN(s) removed`,
+        'info'
+      );
+    }
+
+    // Store the ORIGINAL input order for CSV export (with duplicates)
+    setInputAsinOrder(originalOrder);
 
     setIsLoading(true);
     setResults([]); // Clear previous results
@@ -136,10 +149,10 @@ export function Check() {
 
     // Clear old results from storage when starting new check
     chrome.storage.local.remove(['check_results', 'check_input_order', 'check_input_text', 'check_timestamp']);
-    
+
     try {
-      // Process each ASIN individually like the old project
-      await processAsinsRealtime(asins);
+      // Process UNIQUE ASINs (no duplicates checked)
+      await processAsinsRealtime(uniqueAsins, originalOrder);
     } catch (error) {
       console.error('Error checking ASINs:', error);
       setIsAnimating(false);
@@ -148,8 +161,11 @@ export function Check() {
     }
   };
 
-  const processAsinsRealtime = async (asins: string[]) => {
-    console.log(`🚀 Processing ${asins.length} ASINs in real-time`);
+  const processAsinsRealtime = async (asins: string[], originalOrder?: string[]) => {
+    console.log(`🚀 Processing ${asins.length} UNIQUE ASINs in batch mode (animated display)`);
+
+    // ✅ BATCH PROCESSING: Process 5 ASINs at once for better performance
+    const BATCH_SIZE = 5;
 
     // Initialize progress
     setProgress({ processed: 0, total: asins.length, success: 0, warning: 0, error: 0 });
@@ -159,32 +175,31 @@ export function Check() {
     let warningCount = 0;
     let errorCount = 0;
 
-    // Process each ASIN individually and show results immediately
-    for (let i = 0; i < asins.length; i++) {
-      const asin = asins[i];
-      console.log(`🔍 Processing ASIN ${i + 1}/${asins.length}: ${asin}`);
+    // ✅ QUEUE SYSTEM: Store results in queue, display with constant interval
+    const resultQueue: CheckResult[] = [];
+    let fetchingComplete = false;
 
-      try {
-        // Check single ASIN
-        const result = await apiClient.checkASINs([asin]);
+    // ✅ DISPLAY LOOP: Show results from queue with constant 600ms interval
+    const displayLoop = async () => {
+      while (!fetchingComplete || resultQueue.length > 0) {
+        if (resultQueue.length > 0) {
+          const asinResult = resultQueue.shift()!;
+          console.log(`✅ Displaying result for ${asinResult.asin}`);
 
-        if (result.success && result.results && result.results.length > 0) {
-          const asinResult = result.results[0];
-          console.log(`✅ Got result for ${asin}:`, asinResult);
-
-          // Add result to UI immediately (at the top like old project)
+          // Add result to UI
           setResults(prev => [asinResult, ...prev]);
 
-          // Auto scroll to top to show new result
+          // Auto scroll to top
           setTimeout(() => {
             const resultsContainer = document.getElementById('results');
             if (resultsContainer) {
               resultsContainer.scrollTop = 0;
             }
-          }, 100);
+          }, 50);
+
           processedCount++;
 
-          // Update counters (skip NOT_FOUND_IN_MARKETPLACE from stats)
+          // Update counters
           if (asinResult.detailedStatus === 'NOT_FOUND_IN_MARKETPLACE') {
             // Don't count "not found" in statistics
           } else if (asinResult.sellable) {
@@ -196,46 +211,81 @@ export function Check() {
           }
 
           // Update progress
-          setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+          setProgress({
+            processed: processedCount,
+            total: asins.length,
+            success: successCount,
+            warning: warningCount,
+            error: errorCount
+          });
 
-          // Update usage data if provided (like old project)
+          // ✅ CONSTANT INTERVAL: Always wait 600ms between cards
+          await new Promise(resolve => setTimeout(resolve, 600));
+        } else {
+          // Queue empty, wait a bit and check again
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      // All done
+      setIsAnimating(false);
+      setIsLoading(false);
+      showToast(
+        t('checkedAsinsSuccessfully')?.replace('{count}', processedCount.toString()) ||
+        `Successfully checked ${processedCount} ASIN(s)`,
+        'success'
+      );
+
+      // Update usage data
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error('Error refreshing subscription data:', error);
+      }
+    };
+
+    // Start display loop (non-blocking)
+    displayLoop();
+
+    // ✅ FETCH LOOP: Get results from backend and add to queue
+    for (let i = 0; i < asins.length; i += BATCH_SIZE) {
+      const batch = asins.slice(i, i + BATCH_SIZE);
+      console.log(`📦 Fetching batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(asins.length / BATCH_SIZE)}: ${batch.join(', ')}`);
+
+      try {
+        // Send BATCH to backend
+        const result = await apiClient.checkASINs(batch);
+
+        if (result.success && result.results && result.results.length > 0) {
+          // ✅ Add results to queue (display loop will show them)
+          resultQueue.push(...result.results);
+          console.log(`✅ Added ${result.results.length} results to queue (queue size: ${resultQueue.length})`);
+
+          // Update usage data if provided
           if (result.usage) {
-            window.dispatchEvent(new CustomEvent('usageUpdated', { 
-              detail: result.usage 
+            window.dispatchEvent(new CustomEvent('usageUpdated', {
+              detail: result.usage
             }));
           }
-
         } else {
-          console.warn(`⚠️ No result received for ASIN: ${asin}`);
-          errorCount++;
-          processedCount++;
-          setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+          console.warn(`⚠️ No results received for batch:`, batch);
+          errorCount += batch.length;
         }
 
       } catch (error) {
-        console.error(`❌ Error processing ${asin}:`, error);
-        errorCount++;
-        processedCount++;
-        setProgress({ processed: processedCount, total: asins.length, success: successCount, warning: warningCount, error: errorCount });
+        console.error(`❌ Error processing batch:`, batch, error);
+        errorCount += batch.length;
       }
 
-      // Small delay to avoid overwhelming the API (like old project)
-      if (i < asins.length - 1) {
+      // Small delay between batch requests (rate limiting)
+      if (i + BATCH_SIZE < asins.length) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 
-    // Complete processing
-    setIsAnimating(false);
-    setIsLoading(false);
-    showToast(t('checkedAsinsSuccessfully').replace('{count}', processedCount.toString()), 'success');
-    
-    // Update usage data - limit will be handled by SubscriptionContext
-    try {
-      await refreshData();
-    } catch (error) {
-      console.error('Error refreshing subscription data:', error);
-    }
+    // Mark fetching as complete
+    fetchingComplete = true;
+    console.log('✅ All batches fetched, waiting for display loop to finish...');
   };
 
   const handleClearResults = () => {
